@@ -1,3 +1,5 @@
+/*jslint browser: true, devel: true, todo: true, unparam: true */
+/*global define, btoa */
 /*
  Copyright 2014 Red Hat Inc.
 
@@ -14,6 +16,7 @@
  limitations under the License.
  */
 (function (root, factory) {
+    'use strict';
     if (typeof define === 'function' && define.amd) {
         define('strata', ['jquery', 'jsUri'], factory);
     } else {
@@ -21,26 +24,54 @@
     }
 }(this, function ($, Uri) {
     'use strict';
-    var strata = {};
-    strata.version = "1.0";
 
+    var strata = {},
     //Since we can't set the UserAgent
-    var redhatClient = "redhat_client";
-    var redhatClientID = "stratajs-" + strata.version;
+        redhatClient = "redhat_client",
+        redhatClientID,
+        //Internal copy of user, might be useful for logging, only valid for cookie auth
+        authedUser = {},
+        basicAuthToken = "",
+        portalHostname = 'access.redhat.com',
+        strataHostname = new Uri('https://api.' + portalHostname),
+        baseAjaxParams = {},
+        authAjaxParams,
+        checkCredentials,
+        fetchSolution,
+        fetchArticle,
+        searchArticles,
+        fetchCase,
+        fetchCaseComments,
+        createComment,
+        fetchCases,
+        filterCases,
+        createAttachment,
+        listCaseAttachments,
+        getSymptomsFromText,
+        listGroups,
+        fetchGroup,
+        listProducts,
+        fetchProduct,
+        fetchProductVersions,
+        caseTypes,
+        caseSeverities,
+        caseStatus,
+        fetchSystemProfiles,
+        fetchSystemProfile,
+        createSystemProfile;
+
+    strata.version = "1.0";
+    redhatClientID = "stratajs-" + strata.version;
 
     strata.setRedhatClientID = function (id) {
         redhatClientID = id;
     };
-
-    //Internal copy of user, might be useful for logging, only valid for cookie auth
-    var authedUser = {};
 
     strata.getAuthInfo = function () {
         return authedUser;
     };
 
     //Store Base64 Encoded Auth Token
-    var basicAuthToken = "";
     basicAuthToken = localStorage.getItem("rhAuthToken");
 
     strata.setCredentials = function (username, password) {
@@ -49,10 +80,8 @@
     };
 
     //Private vars related to the connection
-    var portalHostname = 'access.redhat.com';
-    var strataHostname = new Uri('https://api.' + portalHostname);
     strataHostname.addQueryParam(redhatClient, redhatClientID);
-    var baseAjaxParams = {
+    baseAjaxParams = {
         accepts: {
             jsonp: 'application/json, text/json'
         },
@@ -62,11 +91,10 @@
         beforeSend: function (xhr) {
             //Include Basic Auth Credentials if available, will try SSO Cookie otherwise
             xhr.setRequestHeader('X-Omit', 'WWW-Authenticate');
-            if (basicAuthToken === null || basicAuthToken.length === 0) {
-                //Take advantage of lazy eval for Chrome fix
-                //Chrome localStorage.get returns null, FF returns ""
-            } else {
-                xhr.setRequestHeader('Authorization', "Basic " + basicAuthToken);
+            if (basicAuthToken !== null) {
+                if (basicAuthToken.length !== 0) {
+                    xhr.setRequestHeader('Authorization', "Basic " + basicAuthToken);
+                }
             }
         },
         headers: {
@@ -80,7 +108,7 @@
         dataType: 'json'
     };
 
-    var authAjaxParams = $.extend({
+    authAjaxParams = $.extend({
         url: 'https://' + portalHostname +
             '/services/user/status?jsoncallback=?',
         dataType: 'jsonp'
@@ -94,7 +122,7 @@
         var key;
         for (key in entry) {
             if (entry.hasOwnProperty(key)) {
-                if (/.+_date/.test(key)) {
+                if (/[\s\S]*_date/.test(key)) {
                     //Skip indexed_date, it's not a real "Date"
                     if (key !== "indexed_date") {
                         entry[key] = new Date(entry[key]);
@@ -217,7 +245,7 @@
             }, authAjaxParams);
             $.ajax(loginParams);
         } else {
-            var checkCredentials = $.extend({}, baseAjaxParams, {
+            checkCredentials = $.extend({}, baseAjaxParams, {
                 url: strataHostname.clone().setPath('/rs/entitlements'),
                 success: function () {
                     loginHandler(true);
@@ -270,7 +298,7 @@
             url = strataHostname.clone().setPath('/rs/solutions/' + solution);
         }
 
-        var fetchSolution = $.extend({}, baseAjaxParams, {
+        fetchSolution = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 convertDates(response);
@@ -316,7 +344,7 @@
             url = strataHostname.clone().setPath('/rs/articles/' + article);
         }
 
-        var fetchArticle = $.extend({}, baseAjaxParams, {
+        fetchArticle = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 convertDates(response);
@@ -337,7 +365,7 @@
         url.addQueryParam('keyword', keyword);
         url.addQueryParam('limit', limit);
 
-        var searchArticles = $.extend({}, baseAjaxParams, {
+        searchArticles = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 response.article.forEach(convertDates);
@@ -366,7 +394,7 @@
             url = strataHostname.clone().setPath('/rs/cases/' + casenum);
         }
 
-        var fetchCase = $.extend({}, baseAjaxParams, {
+        fetchCase = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 convertDates(response);
@@ -390,7 +418,7 @@
             url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/comments');
         }
 
-        var fetchCaseComments = $.extend({}, baseAjaxParams, {
+        fetchCaseComments = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 response.comment.forEach(convertDates);
@@ -417,15 +445,15 @@
             url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/comments');
         }
 
-        var createComment = $.extend({}, baseAjaxParams, {
+        createComment = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify(casecomment),
             type: 'POST',
             method: 'POST',
             success: function (response, status, xhr) {
                 //Created case comment data is in the XHR
-                var casenum = xhr.getResponseHeader("Location");
-                casenum = casenum.split("/").pop();
+                var commentnum = xhr.getResponseHeader("Location");
+                commentnum = commentnum.split("/").pop();
                 onSuccess(casenum);
             },
             error: onFailure
@@ -441,7 +469,7 @@
         var url = strataHostname.clone().setPath('/rs/cases');
         url.addQueryParam('includeClosed', closed);
 
-        var fetchCases = $.extend({}, baseAjaxParams, {
+        fetchCases = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 response.case.forEach(convertDates);
@@ -463,7 +491,7 @@
         //Remove any 0 length fields
         removeEmpty(casefilter);
 
-        var filterCases = $.extend({}, baseAjaxParams, {
+        filterCases = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify(casefilter),
             type: 'POST',
@@ -485,7 +513,7 @@
 
         var url = strataHostname.clone().setPath('/rs/cases');
 
-        var createAttachment = $.extend({}, baseAjaxParams, {
+        createAttachment = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify(casedata),
             type: 'POST',
@@ -514,7 +542,7 @@
             url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/attachments');
         }
 
-        var listCaseAttachments = $.extend({}, baseAjaxParams, {
+        listCaseAttachments = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 if (response.attachment === undefined) {
@@ -545,7 +573,7 @@
             url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/attachments');
         }
 
-        var createAttachment = $.extend({}, baseAjaxParams, {
+        createAttachment = $.extend({}, baseAjaxParams, {
             url: url,
             data: data,
             type: 'POST',
@@ -567,7 +595,7 @@
 
         var url = strataHostname.clone().setPath('/rs/symptoms/extractor');
 
-        var getSymptomsFromText = $.extend({}, baseAjaxParams, {
+        getSymptomsFromText = $.extend({}, baseAjaxParams, {
             url: url,
             data: data,
             type: 'POST',
@@ -590,7 +618,7 @@
 
         var url = strataHostname.clone().setPath('/rs/groups');
 
-        var listGroups = $.extend({}, baseAjaxParams, {
+        listGroups = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 onSuccess(response.group);
@@ -613,7 +641,7 @@
             url = strataHostname.clone().setPath('/rs/groups/' + groupnum);
         }
 
-        var fetchGroup = $.extend({}, baseAjaxParams, {
+        fetchGroup = $.extend({}, baseAjaxParams, {
             url: url,
             success: onSuccess,
             error: onFailure
@@ -630,7 +658,7 @@
 
         var url = strataHostname.clone().setPath('/rs/products');
 
-        var listProducts = $.extend({}, baseAjaxParams, {
+        listProducts = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 onSuccess(response.product);
@@ -653,7 +681,7 @@
             url = strataHostname.clone().setPath('/rs/products/' + code);
         }
 
-        var fetchProduct = $.extend({}, baseAjaxParams, {
+        fetchProduct = $.extend({}, baseAjaxParams, {
             url: url,
             success: onSuccess,
             error: onFailure
@@ -674,7 +702,7 @@
             url = strataHostname.clone().setPath('/rs/products/' + code + '/versions');
         }
 
-        var fetchProductVersions = $.extend({}, baseAjaxParams, {
+        fetchProductVersions = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 onSuccess(response.version);
@@ -694,7 +722,7 @@
 
         var url = strataHostname.clone().setPath('/rs/values/case/types');
 
-        var caseTypes = $.extend({}, baseAjaxParams, {
+        caseTypes = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 onSuccess(response.value);
@@ -710,7 +738,7 @@
 
         var url = strataHostname.clone().setPath('/rs/values/case/severity');
 
-        var caseSeverities = $.extend({}, baseAjaxParams, {
+        caseSeverities = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 onSuccess(response.value);
@@ -726,7 +754,7 @@
 
         var url = strataHostname.clone().setPath('/rs/values/case/status');
 
-        var caseStatus = $.extend({}, baseAjaxParams, {
+        caseStatus = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 onSuccess(response.value);
@@ -745,7 +773,7 @@
 
         var url = strataHostname.clone().setPath('/rs/system_profiles');
 
-        var fetchSystemProfiles = $.extend({}, baseAjaxParams, {
+        fetchSystemProfiles = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 onSuccess(response.system_profile);
@@ -769,7 +797,7 @@
             url = strataHostname.clone().setPath('/rs/system_profiles/' + casenum);
         }
 
-        var fetchSystemProfile = $.extend({}, baseAjaxParams, {
+        fetchSystemProfile = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 if ($.isArray(response.system_profile)) {
@@ -792,7 +820,7 @@
 
         var url = strataHostname.clone().setPath('/rs/system_profiles');
 
-        var createSystemProfile = $.extend({}, baseAjaxParams, {
+        createSystemProfile = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify(systemprofile),
             type: 'POST',
