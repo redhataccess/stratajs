@@ -18,7 +18,7 @@
 require.config({
     paths: {
         jquery: 'js/jquery-1.11.0',
-        jsuri: 'js/Uri',
+        jsUri: 'js/Uri',
         strata: '../strata'
     }
 });
