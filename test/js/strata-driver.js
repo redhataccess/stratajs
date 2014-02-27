@@ -18,11 +18,11 @@
 require.config({
     paths: {
         jquery: 'js/jquery-1.11.0',
-        jsUri: 'js/Uri',
+        jsuri: 'js/Uri',
         strata: '../strata'
     }
 });
-require(['jquery', 'strata'], function (jquery, strata) {
+require(['strata'], function (strata) {
 
     'use strict';
     //Get strata.js version
