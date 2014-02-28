@@ -32,8 +32,8 @@
         //Internal copy of user, might be useful for logging, only valid for cookie auth
         authedUser = {},
         basicAuthToken = "",
-        portalHostname = 'access.redhat.com',
-        strataHostname = new Uri('https://api.' + portalHostname),
+        portalHostname,
+        strataHostname,
         baseAjaxParams = {},
         authAjaxParams,
         checkCredentials,
@@ -59,6 +59,16 @@
         fetchSystemProfiles,
         fetchSystemProfile,
         createSystemProfile;
+
+    if (window.portal && window.portal.host) {
+        //if this is a chromed app this will work otherwise we default to prod
+        portalHostname = new Uri(window.portal.host).host();
+
+    } else {
+        portalHostname = 'access.redhat.com';
+    }
+
+    strataHostname = new Uri('https://api.' + portalHostname);
 
     strata.version = "1.0";
     redhatClientID = "stratajs-" + strata.version;
