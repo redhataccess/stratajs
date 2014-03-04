@@ -464,7 +464,7 @@
                 //Created case comment data is in the XHR
                 var commentnum = xhr.getResponseHeader("Location");
                 commentnum = commentnum.split("/").pop();
-                onSuccess(casenum);
+                onSuccess(commentnum);
             },
             error: onFailure
         });
