@@ -38,8 +38,6 @@ require(['strata'], function (strata) {
         console.log(xhr);
     }
 
-    //isAuthed: bool
-    //authedUser: Object containing user information, only valid for SSO Cookie
     function loginHandler(isAuthed, authedUser) {
         console.log(isAuthed);
         if (authedUser !== undefined) {
@@ -82,7 +80,7 @@ require(['strata'], function (strata) {
     //Extract symptoms from text
     strata.symptoms.extractor(
         "20:32:50,123 09as somethign fun \n\
-    20:32:50,618 WARN  [org.jboss.jca.core.connectionmanager.pool.strategy.OnePool] (JCA PoolFiller) IJ000610: Unable to fill pool: javax.resource.ResourceException: Could not create connection \n\
+20:32:50,618 WARN  [org.jboss.jca.core.connectionmanager.pool.strategy.OnePool] (JCA PoolFiller) IJ000610: Unable to fill pool: javax.resource.ResourceException: Could not create connection \n\
          at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.getLocalManagedConnection(LocalManagedConnectionFactory.java:282) \n\
          at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.createManagedConnection(LocalManagedConnectionFactory.java:240) \n\
          at org.jboss.jca.core.connectionmanager.pool.mcp.SemaphoreArrayListManagedConnectionPool.createConnectionEventListener(SemaphoreArrayListManagedConnectionPool.java:781) [ironjacamar-core-impl-1.0.17.Final-redhat-1.jar:1.0.17.Final-redhat-1] \n\
@@ -112,7 +110,7 @@ require(['strata'], function (strata) {
          at org.postgresql.core.PGStream.<init>(PGStream.java:60) \n\
          at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:101) \n\
          ... 14 more \n\
-    20:32:50,750 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015961: Http management interface listening on http://127.0.0.1:9990/management",
+20:32:50,750 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015961: Http management interface listening on http://127.0.0.1:9990/management",
         function (response) {
             console.log(response);
         }
@@ -289,5 +287,8 @@ require(['strata'], function (strata) {
      },
      onFailure
      );*/
+
+    //Clear user credentials
+    strata.clearCredentials();
 //COMMENT OUT LINE BELOW FOR NON-REQUIRE
 });

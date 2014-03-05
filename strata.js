@@ -83,10 +83,19 @@
 
     //Store Base64 Encoded Auth Token
     basicAuthToken = localStorage.getItem("rhAuthToken");
+    authedUser.login = localStorage.getItem("rhUserName");
 
     strata.setCredentials = function (username, password) {
         basicAuthToken = btoa(username + ":" + password);
         localStorage.setItem("rhAuthToken", basicAuthToken);
+        localStorage.setItem("rhUserName", username);
+        authedUser.login = username;
+    };
+
+    strata.clearCredentials = function () {
+        localStorage.setItem("rhAuthToken", '');
+        localStorage.setItem("rhUserName", '');
+        authedUser = {};
     };
 
     //Private vars related to the connection
@@ -256,9 +265,11 @@
             $.ajax(loginParams);
         } else {
             checkCredentials = $.extend({}, baseAjaxParams, {
-                url: strataHostname.clone().setPath('/rs/entitlements'),
-                success: function () {
-                    loginHandler(true);
+                url: strataHostname.clone().setPath('/rs/users')
+                    .addQueryParam('ssoUserName', authedUser.login),
+                success: function (response) {
+                    authedUser.name = response.first_name + ' ' + response.last_name;
+                    loginHandler(true, authedUser);
                 },
                 error: function () {
                     loginHandler(false);
