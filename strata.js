@@ -95,6 +95,7 @@
     strata.clearCredentials = function () {
         localStorage.setItem("rhAuthToken", '');
         localStorage.setItem("rhUserName", '');
+        basicAuthToken = "";
         authedUser = {};
     };
 
