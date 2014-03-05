@@ -28,21 +28,21 @@ require(['strata'], function (strata) {
     //Get strata.js version
     console.log(strata.version);
 
-    //Use this method to login, will default to SSO cookie if this is not set
-    //DO NOT SET CREDENTIALS IF YOU WANT TO USE SSO COOKIE
-    //strata.setCredentials("USERID", "PASSWORD");
-
-    function onFailure(response, status, xhr) {
-        console.log(response);
-        console.log(status);
-        console.log(xhr);
-    }
-
     function loginHandler(isAuthed, authedUser) {
         console.log(isAuthed);
         if (authedUser !== undefined) {
             console.log(authedUser);
         }
+    }
+
+    //Use this method to login, will default to SSO cookie if this is not set
+    //DO NOT SET CREDENTIALS IF YOU WANT TO USE SSO COOKIE
+    //strata.setCredentials("USERNAME", "PASSWORD", loginHandler);
+
+    function onFailure(response, status, xhr) {
+        console.log(response);
+        console.log(status);
+        console.log(xhr);
     }
 
     //Check to see if the user's credentials are good

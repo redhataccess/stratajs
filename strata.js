@@ -85,11 +85,12 @@
     basicAuthToken = localStorage.getItem("rhAuthToken");
     authedUser.login = localStorage.getItem("rhUserName");
 
-    strata.setCredentials = function (username, password) {
+    strata.setCredentials = function (username, password, handleLogin) {
         basicAuthToken = btoa(username + ":" + password);
         localStorage.setItem("rhAuthToken", basicAuthToken);
         localStorage.setItem("rhUserName", username);
         authedUser.login = username;
+        strata.checkLogin(handleLogin);
     };
 
     strata.clearCredentials = function () {
@@ -268,9 +269,10 @@
             checkCredentials = $.extend({}, baseAjaxParams, {
                 url: strataHostname.clone().setPath('/rs/users')
                     .addQueryParam('ssoUserName', authedUser.login),
+                context: authedUser,
                 success: function (response) {
-                    authedUser.name = response.first_name + ' ' + response.last_name;
-                    loginHandler(true, authedUser);
+                    this.name = response.first_name + ' ' + response.last_name;
+                    loginHandler(true, this);
                 },
                 error: function () {
                     loginHandler(false);
