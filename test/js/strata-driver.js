@@ -81,35 +81,35 @@ require(['strata'], function (strata) {
     strata.symptoms.extractor(
         "20:32:50,123 09as somethign fun \n\
 20:32:50,618 WARN  [org.jboss.jca.core.connectionmanager.pool.strategy.OnePool] (JCA PoolFiller) IJ000610: Unable to fill pool: javax.resource.ResourceException: Could not create connection \n\
-         at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.getLocalManagedConnection(LocalManagedConnectionFactory.java:282) \n\
-         at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.createManagedConnection(LocalManagedConnectionFactory.java:240) \n\
-         at org.jboss.jca.core.connectionmanager.pool.mcp.SemaphoreArrayListManagedConnectionPool.createConnectionEventListener(SemaphoreArrayListManagedConnectionPool.java:781) [ironjacamar-core-impl-1.0.17.Final-redhat-1.jar:1.0.17.Final-redhat-1] \n\
-         at org.jboss.jca.core.connectionmanager.pool.mcp.SemaphoreArrayListManagedConnectionPool.fillToMin(SemaphoreArrayListManagedConnectionPool.java:725) [ironjacamar-core-impl-1.0.17.Final-redhat-1.jar:1.0.17.Final-redhat-1] \n\
-         at org.jboss.jca.core.connectionmanager.pool.mcp.PoolFiller.run(PoolFiller.java:97) [ironjacamar-core-impl-1.0.17.Final-redhat-1.jar:1.0.17.Final-redhat-1] \n\
-         at java.lang.Thread.run(Thread.java:744) [rt.jar:1.7.0_45] \n\
-    Caused by: org.postgresql.util.PSQLException: Connection refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. \n\
-         at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:207) \n\
-         at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:64) \n\
-         at org.postgresql.jdbc2.AbstractJdbc2Connection.<init>(AbstractJdbc2Connection.java:136) \n\
-         at org.postgresql.jdbc3.AbstractJdbc3Connection.<init>(AbstractJdbc3Connection.java:29) \n\
-         at org.postgresql.jdbc3g.AbstractJdbc3gConnection.<init>(AbstractJdbc3gConnection.java:21) \n\
-         at org.postgresql.jdbc4.AbstractJdbc4Connection.<init>(AbstractJdbc4Connection.java:31) \n\
-         at org.postgresql.jdbc4.Jdbc4Connection.<init>(Jdbc4Connection.java:24) \n\
-         at org.postgresql.Driver.makeConnection(Driver.java:393) \n\
-         at org.postgresql.Driver.connect(Driver.java:267) \n\
-         at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.getLocalManagedConnection(LocalManagedConnectionFactory.java:254) \n\
-         ... 5 more \n\
-    Caused by: java.net.ConnectException: Connection refused \n\
-         at java.net.PlainSocketImpl.socketConnect(Native Method) [rt.jar:1.7.0_45] \n\
-         at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:339) [rt.jar:1.7.0_45] \n\
-         at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:200) [rt.jar:1.7.0_45] \n\
-         at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:182) [rt.jar:1.7.0_45] \n\
-         at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392) [rt.jar:1.7.0_45] \n\
-         at java.net.Socket.connect(Socket.java:579) [rt.jar:1.7.0_45] \n\
-         at java.net.Socket.connect(Socket.java:528) [rt.jar:1.7.0_45] \n\
-         at org.postgresql.core.PGStream.<init>(PGStream.java:60) \n\
-         at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:101) \n\
-         ... 14 more \n\
+    at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.getLocalManagedConnection(LocalManagedConnectionFactory.java:282) \n\
+    at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.createManagedConnection(LocalManagedConnectionFactory.java:240) \n\
+    at org.jboss.jca.core.connectionmanager.pool.mcp.SemaphoreArrayListManagedConnectionPool.createConnectionEventListener(SemaphoreArrayListManagedConnectionPool.java:781) [ironjacamar-core-impl-1.0.17.Final-redhat-1.jar:1.0.17.Final-redhat-1] \n\
+    at org.jboss.jca.core.connectionmanager.pool.mcp.SemaphoreArrayListManagedConnectionPool.fillToMin(SemaphoreArrayListManagedConnectionPool.java:725) [ironjacamar-core-impl-1.0.17.Final-redhat-1.jar:1.0.17.Final-redhat-1] \n\
+    at org.jboss.jca.core.connectionmanager.pool.mcp.PoolFiller.run(PoolFiller.java:97) [ironjacamar-core-impl-1.0.17.Final-redhat-1.jar:1.0.17.Final-redhat-1] \n\
+    at java.lang.Thread.run(Thread.java:744) [rt.jar:1.7.0_45] \n\
+Caused by: org.postgresql.util.PSQLException: Connection refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections. \n\
+    at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:207) \n\
+    at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:64) \n\
+    at org.postgresql.jdbc2.AbstractJdbc2Connection.<init>(AbstractJdbc2Connection.java:136) \n\
+    at org.postgresql.jdbc3.AbstractJdbc3Connection.<init>(AbstractJdbc3Connection.java:29) \n\
+    at org.postgresql.jdbc3g.AbstractJdbc3gConnection.<init>(AbstractJdbc3gConnection.java:21) \n\
+    at org.postgresql.jdbc4.AbstractJdbc4Connection.<init>(AbstractJdbc4Connection.java:31) \n\
+    at org.postgresql.jdbc4.Jdbc4Connection.<init>(Jdbc4Connection.java:24) \n\
+    at org.postgresql.Driver.makeConnection(Driver.java:393) \n\
+    at org.postgresql.Driver.connect(Driver.java:267) \n\
+    at org.jboss.jca.adapters.jdbc.local.LocalManagedConnectionFactory.getLocalManagedConnection(LocalManagedConnectionFactory.java:254) \n\
+    ... 5 more \n\
+Caused by: java.net.ConnectException: Connection refused \n\
+    at java.net.PlainSocketImpl.socketConnect(Native Method) [rt.jar:1.7.0_45] \n\
+    at java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:339) [rt.jar:1.7.0_45] \n\
+    at java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:200) [rt.jar:1.7.0_45] \n\
+    at java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:182) [rt.jar:1.7.0_45] \n\
+    at java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392) [rt.jar:1.7.0_45] \n\
+    at java.net.Socket.connect(Socket.java:579) [rt.jar:1.7.0_45] \n\
+    at java.net.Socket.connect(Socket.java:528) [rt.jar:1.7.0_45] \n\
+    at org.postgresql.core.PGStream.<init>(PGStream.java:60) \n\
+    at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:101) \n\
+    ... 14 more \n\
 20:32:50,750 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015961: Http management interface listening on http://127.0.0.1:9990/management",
         function (response) {
             console.log(response);
@@ -155,8 +155,9 @@ require(['strata'], function (strata) {
             console.log(response);
         },
         onFailure,
-        11
-        );
+        11,
+        false
+    );
 
     //Search Articles by keyword
     strata.articles.search("Networking Issue",
@@ -164,8 +165,9 @@ require(['strata'], function (strata) {
             console.log(response);
         },
         onFailure,
-        11
-        );
+        11,
+        false
+    );
 
     //Fetch a solution by ID, URI to article also acceptable
     /*strata.articles.get("####",
@@ -260,14 +262,14 @@ require(['strata'], function (strata) {
 
     //Helper function to ease working with diagnose
     //Success function called for EACH retured Solution
-    strata.diagnose(
+    /*strata.diagnose(
         "OpenStack Networking Issues",
         function (response) {
             console.log(response);
         },
         onFailure,
         11
-    );
+    );*/
 
     //Returns an array of Articles and Solutions
     strata.search("Networking Issue",
@@ -275,8 +277,9 @@ require(['strata'], function (strata) {
             console.log(response);
         },
         onFailure,
-        11
-        );
+        11,
+        false
+    );
 
     var filter = new strata.CaseFilter();
     filter.id = "#########";

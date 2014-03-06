@@ -334,18 +334,25 @@
     };
 
     //Search for solutions
-    strata.solutions.search = function (keyword, onSuccess, onFailure, limit) {
+    strata.solutions.search = function (keyword, onSuccess, onFailure, limit, chain) {
         if (keyword === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
         if (limit === undefined) {limit = 10; }
+        if (chain === undefined) {chain = false; }
 
         var searchSolutions = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/solutions')
                 .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
             success: function (response) {
-                response.solution.forEach(convertDates);
-                onSuccess(response.solution);
+                if (chain) {
+                    response.solution.forEach( function (entry) {
+                        strata.solutions.get(entry.uri, onSuccess, onFailure);
+                    });
+                } else {
+                    response.solution.forEach(convertDates);
+                    onSuccess(response.solution);
+                }
             },
             error: onFailure
         });
@@ -380,10 +387,11 @@
     };
 
     //Search articles
-    strata.articles.search = function (keyword, onSuccess, onFailure, limit) {
+    strata.articles.search = function (keyword, onSuccess, onFailure, limit, chain) {
         if (keyword === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
         if (limit === undefined) {limit = 10; }
+        if (chain === undefined) {chain = false; }
 
         var url = strataHostname.clone().setPath('/rs/articles');
         url.addQueryParam('keyword', keyword);
@@ -392,8 +400,14 @@
         searchArticles = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                response.article.forEach(convertDates);
-                onSuccess(response.article);
+                if (chain) {
+                    response.article.forEach( function (entry) {
+                            strata.articles.get(entry.uri, onSuccess, onFailure);
+                    });
+                } else {
+                    response.article.forEach(convertDates);
+                    onSuccess(response.article);
+                }
             },
             error: onFailure
         });
@@ -875,21 +889,32 @@
         }, onFailure, limit);
     };
 
-    strata.search = function (keyword, onSuccess, onFailure, limit) {
+    strata.search = function (keyword, onSuccess, onFailure, limit, chain) {
         if (keyword === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
         if (limit === undefined) {limit = 10; }
+        if (chain === undefined) {chain = false; }
 
-        var searchSolutions = $.extend({}, baseAjaxParams, {
+        var searchStrata = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/search')
                 .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
             success: function (response) {
-                onSuccess(response.search_result);
+                if (chain) {
+                    response.search_result.forEach( function (entry) {
+                        if (entry.resource_type === "Solution") {
+                            strata.solutions.get(entry.uri, onSuccess, onFailure);
+                        } else if (entry.resource_type === "Article") {
+                            strata.articles.get(entry.uri, onSuccess, onFailure);
+                        }
+                    });
+                } else {
+                    onSuccess(response.search_result);
+                }
             },
             error: onFailure
         });
-        $.ajax(searchSolutions);
+        $.ajax(searchStrata);
     };
 
     strata.utils = {};
