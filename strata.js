@@ -58,7 +58,10 @@
         caseStatus,
         fetchSystemProfiles,
         fetchSystemProfile,
-        createSystemProfile;
+        createSystemProfile,
+        fetchAccounts,
+        fetchAccount,
+        fetchAccountUsers;
 
     if (window.portal && window.portal.host) {
         //if this is a chromed app this will work otherwise we default to prod
@@ -872,6 +875,70 @@
             error: onFailure
         });
         $.ajax(createSystemProfile);
+    };
+
+    strata.accounts = {};
+
+    //List Accounts for the given user
+    strata.accounts.list = function (onSuccess, onFailure, closed) {
+        if (onSuccess === undefined) { return false; }
+        if (closed === undefined) { closed = false; }
+
+        var url = strataHostname.clone().setPath('/rs/accounts');
+
+        fetchAccounts = $.extend({}, baseAjaxParams, {
+            url: url,
+            success:  onSuccess,
+            error: onFailure
+        });
+        $.ajax(fetchAccounts);
+    };
+
+    //Get an Account
+    strata.accounts.get = function (accountnum, onSuccess, onFailure) {
+        if (accountnum === undefined) { return false; }
+        if (onSuccess === undefined) { return false; }
+
+        var url;
+        if (isUrl(accountnum)) {
+            url = new Uri(accountnum);
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/accounts/' + accountnum);
+        }
+
+        fetchAccount = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: onSuccess,
+            error: onFailure
+        });
+        $.ajax(fetchAccount);
+    };
+
+    //Get an Accounts Users
+    strata.accounts.users = function (accountnum, onSuccess, onFailure, group) {
+        if (accountnum === undefined) { return false; }
+        if (onSuccess === undefined) { return false; }
+
+        var url;
+        if (isUrl(accountnum)) {
+            url = new Uri(accountnum);
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else if (group === undefined) {
+            url = strataHostname.clone().setPath('/rs/accounts/' + accountnum + "/users");
+        } else {
+            url = strataHostname.clone()
+                .setPath('/rs/accounts/' + accountnum + "/groups/" + group + "/users");
+        }
+
+        fetchAccountUsers = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                onSuccess(response.user);
+            },
+            error: onFailure
+        });
+        $.ajax(fetchAccountUsers);
     };
 
     //Helper function to "diagnose" text, chains problems and solutions calls

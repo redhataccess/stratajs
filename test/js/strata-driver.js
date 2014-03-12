@@ -248,7 +248,6 @@ Caused by: java.net.ConnectException: Connection refused \n\
     newCase.product = "Red Hat Enterprise Linux";
     newCase.version = "6.0";
 
-    //Can't obtain the ID of a created case until Access-Control-Expose-Headers is set appropriately
     //strata.cases.post(newCase, function (casenum) { console.log(casenum); });
 
     var newComment = new strata.CaseComment();
@@ -290,6 +289,20 @@ Caused by: java.net.ConnectException: Connection refused \n\
      },
      onFailure
      );*/
+
+    //List accounts for currently logged in user
+    strata.accounts.list(
+        function (response) {
+            console.log(response);
+            strata.accounts.get(response, function (response) {
+                console.log(response);
+            });
+            strata.accounts.users(response, function (response) {
+                console.log(response);
+            });
+        },
+        onFailure
+    );
 
     //Clear user credentials
     strata.clearCredentials();
