@@ -19,6 +19,7 @@ require.config({
     paths: {
         jquery: 'js/jquery-1.11.0',
         jsUri: 'js/Uri',
+        'js-markdown-extra': 'js/js-markdown-extra',
         strata: '../strata'
     }
 });

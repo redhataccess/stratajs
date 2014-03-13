@@ -18,7 +18,7 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define('strata', ['jquery', 'jsUri'], factory);
+        define('strata', ['jquery', 'jsUri', 'js-markdown-extra'], factory);
     } else {
         root.strata = factory(root.$, root.Uri);
     }
@@ -155,6 +155,12 @@
             }
         }
     }
+
+    function markDownToHtml(entry) {
+        var html = Markdown(entry);
+        return html;
+    }
+
 
     //Remove empty fields from object
     //TODO: Make this recursive, so it could remove nested objs
@@ -349,7 +355,7 @@
                 .addQueryParam('limit', limit),
             success: function (response) {
                 if (chain) {
-                    response.solution.forEach( function (entry) {
+                    response.solution.forEach(function (entry) {
                         strata.solutions.get(entry.uri, onSuccess, onFailure);
                     });
                 } else {
@@ -382,6 +388,9 @@
             url: url,
             success: function (response) {
                 convertDates(response);
+                if (response !== undefined && response.body !== undefined) {
+                    response.body = markDownToHtml(response.body);
+                }
                 onSuccess(response);
             },
             error: onFailure
@@ -404,8 +413,8 @@
             url: url,
             success: function (response) {
                 if (chain) {
-                    response.article.forEach( function (entry) {
-                            strata.articles.get(entry.uri, onSuccess, onFailure);
+                    response.article.forEach(function (entry) {
+                        strata.articles.get(entry.uri, onSuccess, onFailure);
                     });
                 } else {
                     response.article.forEach(convertDates);
@@ -968,7 +977,7 @@
                 .addQueryParam('limit', limit),
             success: function (response) {
                 if (chain) {
-                    response.search_result.forEach( function (entry) {
+                    response.search_result.forEach(function (entry) {
                         if (entry.resource_type === "Solution") {
                             strata.solutions.get(entry.uri, onSuccess, onFailure);
                         } else if (entry.resource_type === "Article") {
