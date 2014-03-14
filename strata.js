@@ -101,6 +101,8 @@
         localStorage.setItem("rhUserName", '');
         basicAuthToken = "";
         authedUser = {};
+        $("body").append("<iframe id='rhLogoutFrame' name='rhLogoutFrame' style='display: none;'></iframe>");
+        window.open("https://access.redhat.com/logout", "rhLogoutFrame");
     };
 
     //Private vars related to the connection
@@ -296,7 +298,7 @@
     strata.problems = function (data, onSuccess, onFailure, limit) {
         if (data === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
-        if (limit === undefined) { limit = 10; }
+        if (limit === undefined) { limit = 50; }
 
         var getSolutionsFromText = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/problems')
@@ -346,7 +348,7 @@
     strata.solutions.search = function (keyword, onSuccess, onFailure, limit, chain) {
         if (keyword === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
-        if (limit === undefined) {limit = 10; }
+        if (limit === undefined) {limit = 50; }
         if (chain === undefined) {chain = false; }
 
         var searchSolutions = $.extend({}, baseAjaxParams, {
@@ -402,7 +404,7 @@
     strata.articles.search = function (keyword, onSuccess, onFailure, limit, chain) {
         if (keyword === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
-        if (limit === undefined) {limit = 10; }
+        if (limit === undefined) {limit = 50; }
         if (chain === undefined) {chain = false; }
 
         var url = strataHostname.clone().setPath('/rs/articles');
@@ -955,7 +957,7 @@
     strata.diagnose = function (data, onSuccess, onFailure, limit) {
         if (data === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
-        if (limit === undefined) { limit = 10; }
+        if (limit === undefined) { limit = 50; }
 
         //Call problems, send that list to get solutions to get each one
         strata.problems(data, function (response) {
@@ -968,7 +970,7 @@
     strata.search = function (keyword, onSuccess, onFailure, limit, chain) {
         if (keyword === undefined) { return false; }
         if (onSuccess === undefined) { return false; }
-        if (limit === undefined) {limit = 10; }
+        if (limit === undefined) {limit = 50; }
         if (chain === undefined) {chain = false; }
 
         var searchStrata = $.extend({}, baseAjaxParams, {

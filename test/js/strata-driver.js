@@ -306,6 +306,6 @@ Caused by: java.net.ConnectException: Connection refused \n\
     );
 
     //Clear user credentials
-    strata.clearCredentials();
+    //strata.clearCredentials();
 //COMMENT OUT LINE BELOW FOR NON-REQUIRE
 });
