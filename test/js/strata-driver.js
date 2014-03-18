@@ -272,13 +272,14 @@ Caused by: java.net.ConnectException: Connection refused \n\
     );*/
 
     //Returns an array of Articles and Solutions
+    //Returns resourceType and response if chained
     strata.search("Networking Issue",
-        function (response) {
-            console.log(response);
+        function (resourceType, response) {
+            console.log(resourceType, response);
         },
         onFailure,
         11,
-        false
+        true
     );
 
     var filter = new strata.CaseFilter();

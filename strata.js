@@ -61,6 +61,7 @@
         createSystemProfile,
         fetchAccounts,
         fetchAccount,
+        fetchURI,
         fetchAccountUsers;
 
     if (window.portal && window.portal.host) {
@@ -980,11 +981,7 @@
             success: function (response) {
                 if (chain) {
                     response.search_result.forEach(function (entry) {
-                        if (entry.resource_type === "Solution") {
-                            strata.solutions.get(entry.uri, onSuccess, onFailure);
-                        } else if (entry.resource_type === "Article") {
-                            strata.articles.get(entry.uri, onSuccess, onFailure);
-                        }
+                        strata.utils.getURI(entry.uri, entry.resource_type, onSuccess, onFailure);
                     });
                 } else {
                     onSuccess(response.search_result);
@@ -1009,6 +1006,19 @@
             t = document.selection.createRange().text;
         }
         return t.toString();
+    };
+
+    strata.utils.getURI = function (uri, resourceType, onSuccess, onFailure) {
+        fetchURI = $.extend({}, baseAjaxParams, {
+            url: uri,
+            success: function (response) {
+                convertDates(response);
+                onSuccess(resourceType, response);
+            },
+            error: onFailure
+        });
+        $.ajax(fetchURI);
+
     };
 
     return strata;
