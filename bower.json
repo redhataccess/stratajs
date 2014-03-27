@@ -13,9 +13,9 @@
     "dependencies": {
         "jquery": ">=1.7.2",
         "jsUri": "~1.2.1",
-        "js-markdown-extra": "iphands/js-markdown-extra",
+        "js-markdown-extra": "iphands/js-markdown-extra"
     },
     "authors": [
-    { "name": "Dan Varga", "email": "dvarga@redhat.com"}
+        {"name": "Dan Varga", "email": "dvarga@redhat.com"}
     ]
 }
