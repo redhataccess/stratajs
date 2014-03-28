@@ -474,7 +474,9 @@
         fetchCaseComments = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                response.comment.forEach(convertDates);
+                if (response.comment !== undefined) {
+                    response.comment.forEach(convertDates);
+                }
                 onSuccess(response.comment);
             },
             error: onFailure
@@ -582,6 +584,38 @@
         $.ajax(createAttachment);
     };
 
+    //Update a case
+    strata.cases.put = function (casenum, casedata, onSuccess, onFailure) {
+        //Default parameter value
+        if (casenum === undefined) { return false; }
+        if (casedata === undefined) { return false; }
+        if (onSuccess === undefined) { return false; }
+
+        var url;
+        if (isUrl(casenum)) {
+            url = new Uri(casenum);
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/cases/' + casenum);
+        }
+
+        createAttachment = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: JSON.stringify(casedata),
+            type: 'PUT',
+            method: 'PUT',
+            statusCode: {
+                202: onSuccess,
+                400: onFailure
+            },
+            success: function (response) {
+                onSuccess(response);
+            }
+        });
+        $.ajax(createAttachment);
+    };
+
+
     //List case attachments
     strata.cases.attachments.list = function (casenum, onSuccess, onFailure) {
         if (casenum === undefined) { return false; }
@@ -631,7 +665,28 @@
             data: data,
             type: 'POST',
             method: 'POST',
-            contentType: 'multipart/form-data',
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: onSuccess,
+            error: onFailure
+        });
+        $.ajax(createAttachment);
+    };
+
+    strata.cases.attachments.delete = function (attachmentId, casenum, onSuccess, onFailure) {
+        if (attachmentId === undefined) { return false; }
+        if (casenum === undefined) { return false; }
+        if (onSuccess === undefined) { return false; }
+
+        var url =
+            strataHostname.clone().setPath(
+                '/rs/cases/' + casenum + '/attachments/' + attachmentId
+            );
+        createAttachment = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'DELETE',
+            method: 'DELETE',
             success: onSuccess,
             error: onFailure
         });
