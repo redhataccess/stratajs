@@ -44,8 +44,10 @@
         fetchCaseComments,
         createComment,
         fetchCases,
+        updateCase,
         filterCases,
         createAttachment,
+        deleteAttachment,
         listCaseAttachments,
         getSymptomsFromText,
         listGroups,
@@ -599,7 +601,7 @@
             url = strataHostname.clone().setPath('/rs/cases/' + casenum);
         }
 
-        createAttachment = $.extend({}, baseAjaxParams, {
+        updateCase = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify(casedata),
             type: 'PUT',
@@ -683,7 +685,7 @@
             strataHostname.clone().setPath(
                 '/rs/cases/' + casenum + '/attachments/' + attachmentId
             );
-        createAttachment = $.extend({}, baseAjaxParams, {
+        deleteAttachment = $.extend({}, baseAjaxParams, {
             url: url,
             type: 'DELETE',
             method: 'DELETE',
