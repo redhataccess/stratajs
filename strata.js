@@ -1,5 +1,5 @@
 /*jslint browser: true, devel: true, todo: true, unparam: true */
-/*global define, btoa */
+/*global define, btoa, Markdown */
 /*
  Copyright 2014 Red Hat Inc.
 
@@ -66,6 +66,9 @@
         fetchURI,
         fetchAccountUsers;
 
+    strata.version = "1.0.3";
+    redhatClientID = "stratajs-" + strata.version;
+
     if (window.portal && window.portal.host) {
         //if this is a chromed app this will work otherwise we default to prod
         portalHostname = new Uri(window.portal.host).host();
@@ -75,12 +78,12 @@
     }
 
     strataHostname = new Uri('https://api.' + portalHostname);
-
-    strata.version = "1.0";
-    redhatClientID = "stratajs-" + strata.version;
+    strataHostname.addQueryParam(redhatClient, redhatClientID);
 
     strata.setRedhatClientID = function (id) {
         redhatClientID = id;
+        strataHostname = new Uri('https://api.' + portalHostname);
+        strataHostname.addQueryParam(redhatClient, redhatClientID);
     };
 
     strata.getAuthInfo = function () {
@@ -109,7 +112,6 @@
     };
 
     //Private vars related to the connection
-    strataHostname.addQueryParam(redhatClient, redhatClientID);
     baseAjaxParams = {
         accepts: {
             jsonp: 'application/json, text/json'
@@ -290,6 +292,8 @@
                 },
                 error: function () {
                     loginHandler(false);
+                    //Clear credentials if the login failed
+                    strata.clearCredentials();
                 }
             });
             $.ajax(checkCredentials);
@@ -521,7 +525,11 @@
     //List cases for the given user
     strata.cases.list = function (onSuccess, onFailure, closed) {
         if (onSuccess === undefined) { return false; }
-        if (closed === undefined) { closed = false; }
+        if (closed === undefined) { closed = 'false'; }
+
+        if (!closed) {
+            closed = 'false';
+        }
 
         var url = strataHostname.clone().setPath('/rs/cases');
         url.addQueryParam('includeClosed', closed);
@@ -614,7 +622,7 @@
                 onSuccess(response);
             }
         });
-        $.ajax(createAttachment);
+        $.ajax(updateCase);
     };
 
 
@@ -692,7 +700,7 @@
             success: onSuccess,
             error: onFailure
         });
-        $.ajax(createAttachment);
+        $.ajax(deleteAttachment);
     };
 
     //Base for symptoms
