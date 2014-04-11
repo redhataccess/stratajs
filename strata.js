@@ -37,6 +37,7 @@
         baseAjaxParams = {},
         authAjaxParams,
         checkCredentials,
+        checkCredentialsNoBasic,
         fetchSolution,
         fetchArticle,
         searchArticles,
@@ -66,7 +67,7 @@
         fetchURI,
         fetchAccountUsers;
 
-    strata.version = "1.0.3";
+    strata.version = "1.0.4";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -103,13 +104,24 @@
     };
 
     strata.clearCredentials = function () {
+        strata.clearBasicAuth();
+        strata.clearCookieAuth();
+        authedUser = {};
+    };
+
+    strata.clearBasicAuth = function () {
         localStorage.setItem("rhAuthToken", '');
         localStorage.setItem("rhUserName", '');
         basicAuthToken = "";
-        authedUser = {};
+    };
+
+    strata.clearCookieAuth = function () {
         $("body").append("<iframe id='rhLogoutFrame' name='rhLogoutFrame' style='display: none;'></iframe>");
         window.open("https://access.redhat.com/logout", "rhLogoutFrame");
     };
+
+
+    //Private vars related to the connection
 
     //Private vars related to the connection
     baseAjaxParams = {
@@ -268,37 +280,55 @@
     strata.checkLogin = function (loginHandler) {
         if (loginHandler === undefined) { return false; }
 
-        if (basicAuthToken === null || basicAuthToken.length === 0) {
-            var loginParams = $.extend({
-                success: function (response) {
+        checkCredentials = $.extend({}, baseAjaxParams, {
+            url: strataHostname.clone().setPath('/rs/users')
+                .addQueryParam('ssoUserName', authedUser.login),
+            context: authedUser,
+            success: function (response) {
+                this.name = response.first_name + ' ' + response.last_name;
+                loginHandler(true, this);
+            },
+            error: function () {
+                strata.clearBasicAuth();
+                loginHandler(false);
+            }
+        });
+
+        var loginParams = $.extend({
+            context: authedUser,
+            success: function (response) {
+                //We have an SSO Cookie, check that it's still valid
+                if (response.authorized) {
                     //Copy into our private obj
                     authedUser = response;
-                    if (response.authorized) {
-                        loginHandler(true, response);
-                    } else {
-                        loginHandler(false);
-                    }
+                    //Needs to be here so authedUser.login will resolve
+                    checkCredentialsNoBasic = $.extend({}, baseAjaxParams, {
+                        context: authedUser,
+                        url: strataHostname.clone().setPath('/rs/users')
+                            .addQueryParam('ssoUserName', authedUser.login),
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader('X-Omit', 'WWW-Authenticate');
+                        },
+                        //We are all good
+                        success: function (response) {
+                            loginHandler(true, this);
+                        },
+                        //We have an SSO Cookie but it's invalid
+                        error: function () {
+                            strata.clearCookieAuth();
+                            loginHandler(false);
+                        }
+                    });
+                    //Check /rs/users?ssoUserName=sso-id
+                    $.ajax(checkCredentialsNoBasic);
+                } else {
+                    $.ajax(checkCredentials);
                 }
-            }, authAjaxParams);
-            $.ajax(loginParams);
-        } else {
-            checkCredentials = $.extend({}, baseAjaxParams, {
-                url: strataHostname.clone().setPath('/rs/users')
-                    .addQueryParam('ssoUserName', authedUser.login),
-                context: authedUser,
-                success: function (response) {
-                    this.name = response.first_name + ' ' + response.last_name;
-                    loginHandler(true, this);
-                },
-                error: function () {
-                    loginHandler(false);
-                    //Clear credentials if the login failed
-                    strata.clearCredentials();
-                }
-            });
-            $.ajax(checkCredentials);
+            }
+        }, authAjaxParams);
 
-        }
+        //Check if we have an SSO Cookie
+        $.ajax(loginParams);
     };
 
     //Sends data to the strata diagnostic toolchain
@@ -315,9 +345,13 @@
             method: 'POST',
             contentType: 'text/plain',
             success: function (response) {
-                //Gets the array of solutions
-                var suggestedSolutions = response.source_or_link_or_problem[2].source_or_link;
-                onSuccess(suggestedSolutions);
+                if (response.source_or_link_or_problem[2].source_or_link !== undefined) {
+                    //Gets the array of solutions
+                    var suggestedSolutions = response.source_or_link_or_problem[2].source_or_link;
+                    onSuccess(suggestedSolutions);
+                } else {
+                    onFailure("Failed to retrieve solutions");
+                }
             },
             error: onFailure
         });
@@ -363,13 +397,15 @@
                 .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
             success: function (response) {
-                if (chain) {
+                if (chain && response.solution !== undefined) {
                     response.solution.forEach(function (entry) {
                         strata.solutions.get(entry.uri, onSuccess, onFailure);
                     });
-                } else {
+                } else if (response.solution !== undefined) {
                     response.solution.forEach(convertDates);
                     onSuccess(response.solution);
+                } else {
+                    onFailure("No Solutions Found")
                 }
             },
             error: onFailure
@@ -399,8 +435,9 @@
                 convertDates(response);
                 if (response !== undefined && response.body !== undefined) {
                     response.body = markDownToHtml(response.body);
+                } else {
+                    onFailure("Failed to retrieve Article");
                 }
-                onSuccess(response);
             },
             error: onFailure
         });
@@ -421,13 +458,15 @@
         searchArticles = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                if (chain) {
+                if (chain && response.article !== undefined) {
                     response.article.forEach(function (entry) {
                         strata.articles.get(entry.uri, onSuccess, onFailure);
                     });
-                } else {
+                } else if (response.article !== undefined) {
                     response.article.forEach(convertDates);
                     onSuccess(response.article);
+                } else {
+                    onFailure("Failed to search Articles");
                 }
             },
             error: onFailure
@@ -456,8 +495,12 @@
         fetchCase = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                convertDates(response);
-                onSuccess(response);
+                if (response) {
+                    convertDates(response);
+                    onSuccess(response);
+                } else {
+                    onFailure("Failed to retrieve Case: " + casenum);
+                }
             },
             error: onFailure
         });
@@ -482,8 +525,9 @@
             success: function (response) {
                 if (response.comment !== undefined) {
                     response.comment.forEach(convertDates);
+                } else {
+                    onFailure("Failed to retrieve Comments for Case: " + casenum);
                 }
-                onSuccess(response.comment);
             },
             error: onFailure
         });
@@ -537,8 +581,12 @@
         fetchCases = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                response.case.forEach(convertDates);
-                onSuccess(response.case);
+                if (response.case !== undefined) {
+                    response.case.forEach(convertDates);
+                    onSuccess(response.case);
+                } else {
+                    onFailure("Failed to list Cases");
+                }
             },
             error: onFailure
         });
@@ -562,8 +610,12 @@
             type: 'POST',
             method: 'POST',
             success: function (response) {
-                response.case.forEach(convertDates);
-                onSuccess(response.case);
+                if (response.case !== undefined) {
+                    response.case.forEach(convertDates);
+                    onSuccess(response.case);
+                } else {
+                    onFailure("Could not filter cases");
+                }
             },
             error: onFailure
         });
@@ -643,7 +695,7 @@
             url: url,
             success: function (response) {
                 if (response.attachment === undefined) {
-                    onSuccess({});
+                    onFailure("Failed to retrieve case attachments");
                 } else {
                     response.attachment.forEach(convertDates);
                     onSuccess(response.attachment);
@@ -720,7 +772,11 @@
             method: 'POST',
             contentType: 'text/plain',
             success: function (response) {
-                onSuccess(response.extracted_symptom);
+                if (response.extracted_symptom !== undefined) {
+                    onSuccess(response.extracted_symptom);
+                } else {
+                    onSuccess({});
+                }
             },
             error: onFailure
         });
@@ -739,7 +795,11 @@
         listGroups = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.group);
+                if (response.group !== undefined) {
+                    onSuccess(response.group);
+                } else {
+                    onFailure("Failed to retrieve groups");
+                }
             },
             error: onFailure
         });
@@ -779,7 +839,11 @@
         listProducts = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.product);
+                if (response.product !== undefined) {
+                    onSuccess(response.product);
+                } else {
+                    onFailure("Failed to retrieve Product List");
+                }
             },
             error: onFailure
         });
@@ -823,7 +887,11 @@
         fetchProductVersions = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.version);
+                if (response.version !== undefined) {
+                    onSuccess(response.version);
+                } else {
+                    onFailure("Could not retrieve versions for " + code);
+                }
             },
             error: onFailure
         });
@@ -843,7 +911,11 @@
         caseTypes = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.value);
+                if (response.value !== undefined) {
+                    onSuccess(response.value);
+                } else {
+                    onFailure("Could not retreive case types");
+                }
             },
             error: onFailure
         });
@@ -859,7 +931,11 @@
         caseSeverities = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.value);
+                if (response.value !== undefined) {
+                    onSuccess(response.value);
+                } else {
+                    onFailure("Could not retreive case serverities");
+                }
             },
             error: onFailure
         });
@@ -875,7 +951,11 @@
         caseStatus = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.value);
+                if (response.value !== undefined) {
+                    onSuccess(response.value);
+                } else {
+                    onFailure("Could not retreive case statuses");
+                }
             },
             error: onFailure
         });
@@ -894,7 +974,11 @@
         fetchSystemProfiles = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.system_profile);
+                if (response.system_profile !== undefined) {
+                    onSuccess(response.system_profile);
+                } else {
+                    onFailure("Could not retrieve system profiles");
+                }
             },
             error: onFailure
         });
@@ -1011,7 +1095,11 @@
         fetchAccountUsers = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                onSuccess(response.user);
+                if (response.user !== undefined) {
+                    onSuccess(response.user);
+                } else {
+                    onFailure("Could not retrieve users");
+                }
             },
             error: onFailure
         });
@@ -1044,12 +1132,14 @@
                 .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
             success: function (response) {
-                if (chain) {
+                if (chain && response.search_result !== undefined) {
                     response.search_result.forEach(function (entry) {
                         strata.utils.getURI(entry.uri, entry.resource_type, onSuccess, onFailure);
                     });
-                } else {
+                } else if (response.search_result !== undefined) {
                     onSuccess(response.search_result);
+                } else {
+                    onSuccess({});
                 }
             },
             error: onFailure
@@ -1083,7 +1173,6 @@
             error: onFailure
         });
         $.ajax(fetchURI);
-
     };
 
     return strata;
