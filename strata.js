@@ -89,7 +89,7 @@
 
     strata.setStrataHostname = function (hostname) {
         portalHostname = hostname;
-        strataHostname = new Uri('https://' + portalHostname);
+        strataHostname = new Uri('https://api.' + portalHostname);
         strataHostname.addQueryParam(redhatClient, redhatClientID);
     };
 
