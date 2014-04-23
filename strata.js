@@ -128,8 +128,6 @@
 
 
     //Private vars related to the connection
-
-    //Private vars related to the connection
     baseAjaxParams = {
         accepts: {
             jsonp: 'application/json, text/json'
@@ -315,6 +313,12 @@
                         beforeSend: function (xhr) {
                             xhr.setRequestHeader('X-Omit', 'WWW-Authenticate');
                         },
+                        statusCode: {
+                            401: function () {
+                                strata.clearCookieAuth();
+                                loginHandler(false);
+                            }
+                        },
                         //We are all good
                         success: function (response) {
                             loginHandler(true, this);
@@ -356,7 +360,7 @@
                     var suggestedSolutions = response.source_or_link_or_problem[2].source_or_link;
                     onSuccess(suggestedSolutions);
                 } else {
-                    onFailure("Failed to retrieve solutions");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -411,7 +415,7 @@
                     response.solution.forEach(convertDates);
                     onSuccess(response.solution);
                 } else {
-                    onFailure("No Solutions Found")
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -442,7 +446,7 @@
                 if (response !== undefined && response.body !== undefined) {
                     response.body = markDownToHtml(response.body);
                 } else {
-                    onFailure("Failed to retrieve Article");
+                    onFailure("Failed to retrieve Article " + article);
                 }
             },
             error: onFailure
@@ -472,7 +476,7 @@
                     response.article.forEach(convertDates);
                     onSuccess(response.article);
                 } else {
-                    onFailure("Failed to search Articles");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -591,7 +595,7 @@
                     response.case.forEach(convertDates);
                     onSuccess(response.case);
                 } else {
-                    onFailure("Failed to list Cases");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -620,7 +624,7 @@
                     response.case.forEach(convertDates);
                     onSuccess(response.case);
                 } else {
-                    onFailure("Could not filter cases");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -701,7 +705,7 @@
             url: url,
             success: function (response) {
                 if (response.attachment === undefined) {
-                    onFailure("Failed to retrieve case attachments");
+                    onSuccess([]);
                 } else {
                     response.attachment.forEach(convertDates);
                     onSuccess(response.attachment);
@@ -781,7 +785,7 @@
                 if (response.extracted_symptom !== undefined) {
                     onSuccess(response.extracted_symptom);
                 } else {
-                    onSuccess({});
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -804,7 +808,7 @@
                 if (response.group !== undefined) {
                     onSuccess(response.group);
                 } else {
-                    onFailure("Failed to retrieve groups");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -848,7 +852,7 @@
                 if (response.product !== undefined) {
                     onSuccess(response.product);
                 } else {
-                    onFailure("Failed to retrieve Product List");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -896,7 +900,7 @@
                 if (response.version !== undefined) {
                     onSuccess(response.version);
                 } else {
-                    onFailure("Could not retrieve versions for " + code);
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -920,7 +924,7 @@
                 if (response.value !== undefined) {
                     onSuccess(response.value);
                 } else {
-                    onFailure("Could not retreive case types");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -940,7 +944,7 @@
                 if (response.value !== undefined) {
                     onSuccess(response.value);
                 } else {
-                    onFailure("Could not retreive case serverities");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -960,7 +964,7 @@
                 if (response.value !== undefined) {
                     onSuccess(response.value);
                 } else {
-                    onFailure("Could not retreive case statuses");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -983,7 +987,7 @@
                 if (response.system_profile !== undefined) {
                     onSuccess(response.system_profile);
                 } else {
-                    onFailure("Could not retrieve system profiles");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -1104,7 +1108,7 @@
                 if (response.user !== undefined) {
                     onSuccess(response.user);
                 } else {
-                    onFailure("Could not retrieve users");
+                    onSuccess([]);
                 }
             },
             error: onFailure
@@ -1145,7 +1149,7 @@
                 } else if (response.search_result !== undefined) {
                     onSuccess(response.search_result);
                 } else {
-                    onSuccess({});
+                    onSuccess([]);
                 }
             },
             error: onFailure
