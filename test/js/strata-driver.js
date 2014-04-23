@@ -40,7 +40,8 @@ require(['strata'], function (strata) {
     //DO NOT SET CREDENTIALS IF YOU WANT TO USE SSO COOKIE
     //strata.setCredentials("USERNAME", "PASSWORD", loginHandler);
 
-    function onFailure(response, status, xhr) {
+    function onFailure(error, xhr, response, status) {
+        console.log(error);
         console.log(response);
         console.log(status);
         console.log(xhr);
@@ -114,7 +115,8 @@ Caused by: java.net.ConnectException: Connection refused \n\
 20:32:50,750 INFO  [org.jboss.as] (Controller Boot Thread) JBAS015961: Http management interface listening on http://127.0.0.1:9990/management",
         function (response) {
             console.log(response);
-        }
+        },
+        onFailure
     );
 
     //Fetch a case by ID, URI also acceptable
@@ -298,10 +300,10 @@ Caused by: java.net.ConnectException: Connection refused \n\
             console.log(response);
             strata.accounts.get(response, function (response) {
                 console.log(response);
-            });
+            }, onFailure);
             strata.accounts.users(response, function (response) {
                 console.log(response);
-            });
+            }, onFailure);
         },
         onFailure
     );

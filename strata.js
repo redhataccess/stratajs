@@ -282,7 +282,7 @@
     //PUBLIC METHODS
     //User provides a loginSuccess callback to handle the response
     strata.checkLogin = function (loginHandler) {
-        if (loginHandler === undefined) { return false; }
+        if (!$.isFunction(loginHandler)) { throw "loginHandler callback must be supplied"; }
 
         checkCredentials = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/users')
@@ -343,8 +343,9 @@
 
     //Sends data to the strata diagnostic toolchain
     strata.problems = function (data, onSuccess, onFailure, limit) {
-        if (data === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (data === undefined) { data = ""; }
         if (limit === undefined) { limit = 50; }
 
         var getSolutionsFromText = $.extend({}, baseAjaxParams, {
@@ -363,7 +364,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(getSolutionsFromText);
     };
@@ -373,8 +376,9 @@
 
     //Retrieve a solution
     strata.solutions.get = function (solution, onSuccess, onFailure) {
-        if (solution === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (solution === undefined) { onFailure("solution must be defined"); }
 
         var url;
         if (isUrl(solution)) {
@@ -390,15 +394,18 @@
                 convertDates(response);
                 onSuccess(response);
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchSolution);
     };
 
     //Search for solutions
     strata.solutions.search = function (keyword, onSuccess, onFailure, limit, chain) {
-        if (keyword === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (keyword === undefined) { keyword = ""; }
         if (limit === undefined) {limit = 50; }
         if (chain === undefined) {chain = false; }
 
@@ -418,7 +425,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(searchSolutions);
     };
@@ -428,8 +437,9 @@
 
     //Retrieve an article
     strata.articles.get = function (article, onSuccess, onFailure) {
-        if (article === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (article === undefined) { onFailure("article must be defined"); }
 
         var url;
         if (isUrl(article)) {
@@ -449,15 +459,18 @@
                     onFailure("Failed to retrieve Article " + article);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchArticle);
     };
 
     //Search articles
     strata.articles.search = function (keyword, onSuccess, onFailure, limit, chain) {
-        if (keyword === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (keyword === undefined) { keyword = ""; }
         if (limit === undefined) {limit = 50; }
         if (chain === undefined) {chain = false; }
 
@@ -479,7 +492,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(searchArticles);
     };
@@ -491,8 +506,9 @@
 
     //Retrieve a case
     strata.cases.get = function (casenum, onSuccess, onFailure) {
-        if (casenum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
 
         var url;
         if (isUrl(casenum)) {
@@ -512,15 +528,18 @@
                     onFailure("Failed to retrieve Case: " + casenum);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchCase);
     };
 
     //Retrieve case comments
     strata.cases.comments.get = function (casenum, onSuccess, onFailure) {
-        if (casenum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
 
         var url;
         if (isUrl(casenum)) {
@@ -539,7 +558,9 @@
                     onFailure("Failed to retrieve Comments for Case: " + casenum);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchCaseComments);
     };
@@ -547,10 +568,10 @@
     //TODO: Support DRAFT comments? Only useful for internal
     //Create a new case comment
     strata.cases.comments.post = function (casenum, casecomment, onSuccess, onFailure) {
-        //Default parameter value
-        if (casenum === undefined) { return false; }
-        if (casecomment === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
+        if (casecomment === undefined) { onFailure("casecomment must be defined"); }
 
         var url;
         if (isUrl(casenum)) {
@@ -571,14 +592,17 @@
                 commentnum = commentnum.split("/").pop();
                 onSuccess(commentnum);
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(createComment);
     };
 
     //List cases for the given user
     strata.cases.list = function (onSuccess, onFailure, closed) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
         if (closed === undefined) { closed = 'false'; }
 
         if (!closed) {
@@ -598,16 +622,18 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchCases);
     };
 
     //Filter cases
     strata.cases.filter = function (casefilter, onSuccess, onFailure) {
-        //Default parameter value
-        if (casefilter === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casefilter === undefined) { onFailure("casefilter must be defined"); }
 
         var url = strataHostname.clone().setPath('/rs/cases/filter');
 
@@ -627,7 +653,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(filterCases);
     };
@@ -635,8 +663,9 @@
     //Create a new case
     strata.cases.post = function (casedata, onSuccess, onFailure) {
         //Default parameter value
-        if (casedata === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casedata === undefined) { onFailure("casedata must be defined"); }
 
         var url = strataHostname.clone().setPath('/rs/cases');
 
@@ -651,7 +680,9 @@
                 casenum = casenum.split("/").pop();
                 onSuccess(casenum);
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(createAttachment);
     };
@@ -659,9 +690,10 @@
     //Update a case
     strata.cases.put = function (casenum, casedata, onSuccess, onFailure) {
         //Default parameter value
-        if (casenum === undefined) { return false; }
-        if (casedata === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
+        if (casedata === undefined) { onFailure("casedata must be defined"); }
 
         var url;
         if (isUrl(casenum)) {
@@ -690,8 +722,9 @@
 
     //List case attachments
     strata.cases.attachments.list = function (casenum, onSuccess, onFailure) {
-        if (casenum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
 
         var url;
         if (isUrl(casenum)) {
@@ -711,7 +744,9 @@
                     onSuccess(response.attachment);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(listCaseAttachments);
     };
@@ -720,9 +755,10 @@
     //data MUST be MULTIPART/FORM-DATA
     strata.cases.attachments.post = function (data, casenum, onSuccess, onFailure) {
         //Default parameter value
-        if (data === undefined) { return false; }
-        if (casenum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (data === undefined) { onFailure("data must be defined"); }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
 
         var url;
         if (isUrl(casenum)) {
@@ -741,15 +777,18 @@
             contentType: false,
             cache: false,
             success: onSuccess,
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(createAttachment);
     };
 
     strata.cases.attachments.delete = function (attachmentId, casenum, onSuccess, onFailure) {
-        if (attachmentId === undefined) { return false; }
-        if (casenum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (attachmentId === undefined) { onFailure("attachmentId must be defined"); }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
 
         var url =
             strataHostname.clone().setPath(
@@ -760,7 +799,9 @@
             type: 'DELETE',
             method: 'DELETE',
             success: onSuccess,
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(deleteAttachment);
     };
@@ -770,8 +811,9 @@
 
     //Symptom Extractor
     strata.symptoms.extractor = function (data, onSuccess, onFailure) {
-        if (data === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (data === undefined) { onFailure("data must be defined"); }
 
         var url = strataHostname.clone().setPath('/rs/symptoms/extractor');
 
@@ -788,7 +830,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(getSymptomsFromText);
     };
@@ -798,7 +842,8 @@
 
     //List groups for this user
     strata.groups.list = function (onSuccess, onFailure) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
         var url = strataHostname.clone().setPath('/rs/groups');
 
@@ -811,15 +856,18 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(listGroups);
     };
 
     //Retrieve a group
     strata.groups.get = function (groupnum, onSuccess, onFailure) {
-        if (groupnum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (groupnum === undefined) { onFailure("groupnum must be defined"); }
 
         var url;
         if (isUrl(groupnum)) {
@@ -832,7 +880,9 @@
         fetchGroup = $.extend({}, baseAjaxParams, {
             url: url,
             success: onSuccess,
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchGroup);
     };
@@ -842,7 +892,8 @@
 
     //List products for this user
     strata.products.list = function (onSuccess, onFailure) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
         var url = strataHostname.clone().setPath('/rs/products');
 
@@ -855,15 +906,18 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(listProducts);
     };
 
     //Retrieve a product
     strata.products.get = function (code, onSuccess, onFailure) {
-        if (code === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (code === undefined) { onFailure("code must be defined"); }
 
         var url;
         if (isUrl(code)) {
@@ -876,15 +930,18 @@
         fetchProduct = $.extend({}, baseAjaxParams, {
             url: url,
             success: onSuccess,
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchProduct);
     };
 
     //Retrieve versions for a product
     strata.products.versions = function (code, onSuccess, onFailure) {
-        if (code === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (code === undefined) { onFailure("code must be defined"); }
 
         var url;
         if (isUrl(code)) {
@@ -903,7 +960,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchProductVersions);
     };
@@ -914,7 +973,8 @@
 
     //Retrieve the case types
     strata.values.cases.types = function (onSuccess, onFailure) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
         var url = strataHostname.clone().setPath('/rs/values/case/types');
 
@@ -927,14 +987,17 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(caseTypes);
     };
 
     //Retrieve the case severities
     strata.values.cases.severity = function (onSuccess, onFailure) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
         var url = strataHostname.clone().setPath('/rs/values/case/severity');
 
@@ -947,14 +1010,17 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(caseSeverities);
     };
 
     //Retrieve the case statuses
     strata.values.cases.status = function (onSuccess, onFailure) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
         var url = strataHostname.clone().setPath('/rs/values/case/status');
 
@@ -967,7 +1033,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(caseStatus);
     };
@@ -977,7 +1045,8 @@
 
     //List system profiles
     strata.systemProfiles.list = function (onSuccess, onFailure) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
         var url = strataHostname.clone().setPath('/rs/system_profiles');
 
@@ -990,7 +1059,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchSystemProfiles);
     };
@@ -998,8 +1069,9 @@
     //Get a specific system_profile, either by hash or casenum
     //Case can return an array, hash will return a single result
     strata.systemProfiles.get = function (casenum, onSuccess, onFailure) {
-        if (casenum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
 
         var url;
         if (isUrl(casenum)) {
@@ -1018,7 +1090,9 @@
                     onSuccess(response);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchSystemProfile);
     };
@@ -1027,8 +1101,9 @@
     //Create a new System Profile
     strata.systemProfiles.post = function (systemprofile, onSuccess, onFailure) {
         //Default parameter value
-        if (systemprofile === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (systemprofile === undefined) { onFailure("systemprofile must be defined"); }
 
         var url = strataHostname.clone().setPath('/rs/system_profiles');
 
@@ -1043,7 +1118,9 @@
                 hash = hash.split("/").pop();
                 onSuccess(hash);
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(createSystemProfile);
     };
@@ -1052,7 +1129,8 @@
 
     //List Accounts for the given user
     strata.accounts.list = function (onSuccess, onFailure, closed) {
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
         if (closed === undefined) { closed = false; }
 
         var url = strataHostname.clone().setPath('/rs/accounts');
@@ -1060,15 +1138,18 @@
         fetchAccounts = $.extend({}, baseAjaxParams, {
             url: url,
             success:  onSuccess,
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchAccounts);
     };
 
     //Get an Account
     strata.accounts.get = function (accountnum, onSuccess, onFailure) {
-        if (accountnum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (accountnum === undefined) { onFailure("accountnum must be defined"); }
 
         var url;
         if (isUrl(accountnum)) {
@@ -1081,15 +1162,18 @@
         fetchAccount = $.extend({}, baseAjaxParams, {
             url: url,
             success: onSuccess,
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchAccount);
     };
 
     //Get an Accounts Users
     strata.accounts.users = function (accountnum, onSuccess, onFailure, group) {
-        if (accountnum === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (accountnum === undefined) { onFailure("accountnum must be defined"); }
 
         var url;
         if (isUrl(accountnum)) {
@@ -1111,7 +1195,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchAccountUsers);
     };
@@ -1119,8 +1205,9 @@
     //Helper function to "diagnose" text, chains problems and solutions calls
     //This will call 'onSuccess' for each solution
     strata.diagnose = function (data, onSuccess, onFailure, limit) {
-        if (data === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (data === undefined) { onFailure("data must be defined"); }
         if (limit === undefined) { limit = 50; }
 
         //Call problems, send that list to get solutions to get each one
@@ -1132,8 +1219,9 @@
     };
 
     strata.search = function (keyword, onSuccess, onFailure, limit, chain) {
-        if (keyword === undefined) { return false; }
-        if (onSuccess === undefined) { return false; }
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (keyword === undefined) { keyword = ""; }
         if (limit === undefined) {limit = 50; }
         if (chain === undefined) {chain = false; }
 
@@ -1152,7 +1240,9 @@
                     onSuccess([]);
                 }
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(searchStrata);
     };
@@ -1180,7 +1270,9 @@
                 convertDates(response);
                 onSuccess(resourceType, response);
             },
-            error: onFailure
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
         });
         $.ajax(fetchURI);
     };
