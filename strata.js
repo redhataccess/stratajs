@@ -67,7 +67,7 @@
         fetchURI,
         fetchAccountUsers;
 
-    strata.version = "1.0.6";
+    strata.version = "1.0.7";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -313,12 +313,6 @@
                         beforeSend: function (xhr) {
                             xhr.setRequestHeader('X-Omit', 'WWW-Authenticate');
                         },
-                        statusCode: {
-                            401: function () {
-                                strata.clearCookieAuth();
-                                loginHandler(false);
-                            }
-                        },
                         //We are all good
                         success: function (response) {
                             loginHandler(true, this);
@@ -332,6 +326,7 @@
                     //Check /rs/users?ssoUserName=sso-id
                     $.ajax(checkCredentialsNoBasic);
                 } else {
+                    strata.clearCookieAuth();
                     $.ajax(checkCredentials);
                 }
             }
