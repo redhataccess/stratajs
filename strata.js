@@ -67,7 +67,7 @@
         fetchURI,
         fetchAccountUsers;
 
-    strata.version = "1.0.7";
+    strata.version = "1.0.8";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -123,7 +123,7 @@
 
     strata.clearCookieAuth = function () {
         $("body").append("<iframe id='rhLogoutFrame' name='rhLogoutFrame' style='display: none;'></iframe>");
-        window.open("https://access.redhat.com/logout", "rhLogoutFrame");
+        window.open("https://" + portalHostname + "/logout", "rhLogoutFrame");
     };
 
 
@@ -549,8 +549,9 @@
             success: function (response) {
                 if (response.comment !== undefined) {
                     response.comment.forEach(convertDates);
+                    onSuccess(response.comment);
                 } else {
-                    onFailure("Failed to retrieve Comments for Case: " + casenum);
+                    onSuccess([]);
                 }
             },
             error: function (xhr, reponse, status) {
