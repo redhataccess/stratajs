@@ -173,12 +173,12 @@ Caused by: java.net.ConnectException: Connection refused \n\
     );
 
     //Fetch a solution by ID, URI to article also acceptable
-    /*strata.articles.get("####",
+    strata.articles.get("19183",
      function (response) {
      console.log(response);
      },
      onFailure
-     );*/
+     );
 
     //List groups for currently logged in user
     strata.groups.list(

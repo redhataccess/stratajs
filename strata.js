@@ -67,7 +67,7 @@
         fetchURI,
         fetchAccountUsers;
 
-    strata.version = "1.0.8";
+    strata.version = "1.0.9";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -448,8 +448,12 @@
             url: url,
             success: function (response) {
                 convertDates(response);
-                if (response !== undefined && response.body !== undefined) {
+                if (response !== undefined && response.body !== undefined && response.body.html === undefined) {
                     response.body = markDownToHtml(response.body);
+                    onSuccess(response);
+                }
+                if (response !== undefined && response.body !== undefined && response.body.html !== undefined) {
+                    onSuccess(response);
                 } else {
                     onFailure("Failed to retrieve Article " + article);
                 }
