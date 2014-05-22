@@ -63,6 +63,7 @@ require(['strata'], function (strata) {
         onFailure
     );
 
+
     //Fetch a solution by ID
     /*strata.solutions.get("####",
      function (response) {
@@ -308,6 +309,7 @@ Caused by: java.net.ConnectException: Connection refused \n\
         onFailure
     );
 
+    //strata.cases.csv();
     //Clear user credentials
     //strata.clearCredentials();
 //COMMENT OUT LINE BELOW FOR NON-REQUIRE

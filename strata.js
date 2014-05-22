@@ -45,6 +45,9 @@
         fetchCaseComments,
         createComment,
         fetchCases,
+        fetchCasesCSV,
+        addNotifiedUser,
+        removeNotifiedUser,
         updateCase,
         filterCases,
         createAttachment,
@@ -67,7 +70,7 @@
         fetchURI,
         fetchAccountUsers;
 
-    strata.version = "1.0.9";
+    strata.version = "1.0.10";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -452,7 +455,7 @@
                     response.body = markDownToHtml(response.body);
                     onSuccess(response);
                 }
-                if (response !== undefined && response.body !== undefined && response.body.html !== undefined) {
+                else if (response !== undefined && response.body !== undefined && response.body.html !== undefined) {
                     onSuccess(response);
                 } else {
                     onFailure("Failed to retrieve Article " + article);
@@ -502,6 +505,7 @@
     strata.cases = {};
     strata.cases.attachments = {};
     strata.cases.comments = {};
+    strata.cases.notified_users = {};
 
     //Retrieve a case
     strata.cases.get = function (casenum, onSuccess, onFailure) {
@@ -628,6 +632,86 @@
         });
         $.ajax(fetchCases);
     };
+
+    //Create a new case comment
+    strata.cases.notified_users.add = function (casenum, ssoUserName, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
+        if (ssoUserName === undefined) { onFailure("ssoUserName must be defined"); }
+
+        var url;
+        if (isUrl(casenum)) {
+            url = new Uri(casenum + '/notified_users');
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/notified_users');
+        }
+
+        addNotifiedUser = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: '{"user": [{"ssoUsername":"' + ssoUserName + '"}]}',
+            type: 'POST',
+            method: 'POST',
+            headers: {
+                Accept: "text/plain"
+            },
+            dataType: 'text',
+            success: onSuccess,
+            statusCode: {
+                201: onSuccess,
+            },
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(addNotifiedUser);
+    };
+
+    strata.cases.notified_users.remove = function (casenum, ssoUserName, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
+        if (ssoUserName === undefined) { onFailure("ssoUserName must be defined"); }
+
+        var url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/notified_users/' + ssoUserName);
+
+        removeNotifiedUser = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'DELETE',
+            method: 'DELETE',
+            contentType: 'text/plain',
+            headers: {
+                Accept: "text/plain"
+            },
+            dataType: 'text',
+            success: onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(removeNotifiedUser);
+    };
+
+    //List cases in CSV for the given user, this casues a download to occur
+    strata.cases.csv = function () {
+        var url = strataHostname.clone().setPath('/rs/cases');
+
+        fetchCasesCSV = $.extend({}, baseAjaxParams, {
+            headers: {
+                Accept: "text/csv"
+            },
+            url: url,
+            contentType: 'text/csv',
+            dataType: 'text',
+            success: function(data){
+                var uri = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(data);
+                window.location = uri;
+            }
+        });
+        $.ajax(fetchCasesCSV);
+    };
+
 
     //Filter cases
     strata.cases.filter = function (casefilter, onSuccess, onFailure) {
@@ -841,11 +925,15 @@
     strata.groups = {};
 
     //List groups for this user
-    strata.groups.list = function (onSuccess, onFailure) {
+    strata.groups.list = function (onSuccess, onFailure, ssoUserName) {
         if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
         if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
-        var url = strataHostname.clone().setPath('/rs/groups');
+        if (ssoUserName === undefined) {
+            var url = strataHostname.clone().setPath('/rs/groups');
+        } else {
+            var url = strataHostname.clone().setPath('/rs/groups/contact/' + ssoUserName)
+        }
 
         listGroups = $.extend({}, baseAjaxParams, {
             url: url,
@@ -891,11 +979,16 @@
     strata.products = {};
 
     //List products for this user
-    strata.products.list = function (onSuccess, onFailure) {
+    strata.products.list = function (onSuccess, onFailure, ssoUserName) {
         if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
         if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
-        var url = strataHostname.clone().setPath('/rs/products');
+        if (ssoUserName === undefined) {
+            var url = strataHostname.clone().setPath('/rs/products');
+        } else {
+            var url = strataHostname.clone().setPath('/rs/products/contact/' + ssoUserName)
+        }
+
 
         listProducts = $.extend({}, baseAjaxParams, {
             url: url,
