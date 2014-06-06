@@ -694,7 +694,7 @@
     };
 
     //List cases in CSV for the given user, this casues a download to occur
-    strata.cases.csv = function () {
+    strata.cases.csv = function (onSuccess, onFailure) {
         var url = strataHostname.clone().setPath('/rs/cases');
 
         fetchCasesCSV = $.extend({}, baseAjaxParams, {
@@ -704,14 +704,17 @@
             url: url,
             contentType: 'text/csv',
             dataType: 'text',
-            success: function(data){
+            success: function(data, response, status) {
                 var uri = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(data);
                 window.location = uri;
+                onSuccess();
+            },
+            error: function (xhr, response, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, response, status);
             }
         });
         $.ajax(fetchCasesCSV);
     };
-
 
     //Filter cases
     strata.cases.filter = function (casefilter, onSuccess, onFailure) {
@@ -932,7 +935,7 @@
         if (ssoUserName === undefined) {
             var url = strataHostname.clone().setPath('/rs/groups');
         } else {
-            var url = strataHostname.clone().setPath('/rs/groups/contact/' + ssoUserName)
+            var url = strataHostname.clone().setPath('/rs/groups/contact/' + ssoUserName);
         }
 
         listGroups = $.extend({}, baseAjaxParams, {
@@ -986,7 +989,7 @@
         if (ssoUserName === undefined) {
             var url = strataHostname.clone().setPath('/rs/products');
         } else {
-            var url = strataHostname.clone().setPath('/rs/products/contact/' + ssoUserName)
+            var url = strataHostname.clone().setPath('/rs/products/contact/' + ssoUserName);
         }
 
 
