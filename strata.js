@@ -70,7 +70,7 @@
         fetchURI,
         fetchAccountUsers;
 
-    strata.version = "1.0.10";
+    strata.version = "1.0.11";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
