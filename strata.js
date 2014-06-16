@@ -70,7 +70,7 @@
         fetchURI,
         fetchAccountUsers;
 
-    strata.version = "1.0.11";
+    strata.version = "1.0.12";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -409,7 +409,7 @@
 
         var searchSolutions = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/solutions')
-                .addQueryParam('keyword', keyword)
+                .addQueryParam('keyword', encodeURIComponent(keyword))
                 .addQueryParam('limit', limit),
             success: function (response) {
                 if (chain && response.solution !== undefined) {
@@ -477,7 +477,7 @@
         if (chain === undefined) {chain = false; }
 
         var url = strataHostname.clone().setPath('/rs/articles');
-        url.addQueryParam('keyword', keyword);
+        url.addQueryParam('keyword', encodeURIComponent(keyword));
         url.addQueryParam('limit', limit);
 
         searchArticles = $.extend({}, baseAjaxParams, {
@@ -1323,7 +1323,7 @@
 
         var searchStrata = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/search')
-                .addQueryParam('keyword', keyword)
+                .addQueryParam('keyword', encodeURIComponent(keyword))
                 .addQueryParam('limit', limit),
             success: function (response) {
                 if (chain && response.search_result !== undefined) {

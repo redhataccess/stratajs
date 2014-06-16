@@ -154,7 +154,7 @@ Caused by: java.net.ConnectException: Connection refused \n\
     );
 
     //Search Solutions by keyword
-    strata.solutions.search("Networking Issue",
+    strata.solutions.search("Networking\ Issue",
         function (response) {
             console.log(response);
         },
@@ -164,7 +164,7 @@ Caused by: java.net.ConnectException: Connection refused \n\
     );
 
     //Search Articles by keyword
-    strata.articles.search("Networking Issue",
+    strata.articles.search("Networking\ Issue",
         function (response) {
             console.log(response);
         },
@@ -276,7 +276,7 @@ Caused by: java.net.ConnectException: Connection refused \n\
 
     //Returns an array of Articles and Solutions
     //Returns resourceType and response if chained
-    strata.search("Networking Issue",
+    strata.search("Networking\ Issue",
         function (resourceType, response) {
             console.log(resourceType, response);
         },
