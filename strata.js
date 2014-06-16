@@ -55,6 +55,8 @@
         listCaseAttachments,
         getSymptomsFromText,
         listGroups,
+        createGroup,
+        deleteGroup,
         fetchGroup,
         listProducts,
         fetchProduct,
@@ -538,6 +540,35 @@
         $.ajax(fetchCase);
     };
 
+    //update case comment
+    strata.cases.comments.update = function (casenum, comment, commentId, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (casenum === undefined) { onFailure("casenum must be defined"); }
+
+        var url;
+        if (isUrl(casenum)) {
+            url = new Uri(casenum + '/comments');
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/comments/' + commentId);
+        }
+
+        fetchCaseComments = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'PUT',
+            method: 'PUT',
+            data: JSON.stringify(comment),
+            statusCode: {
+                200: function(response) {
+                  onSuccess();
+                },
+                400: onFailure
+            }
+        });
+        $.ajax(fetchCaseComments);
+    };
+
     //Retrieve case comments
     strata.cases.comments.get = function (casenum, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
@@ -790,13 +821,18 @@
             url = strataHostname.clone().setPath('/rs/cases/' + casenum);
         }
 
+        var successCallback = function() {
+          onSuccess();
+        };
+
         updateCase = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify(casedata),
             type: 'PUT',
             method: 'PUT',
             statusCode: {
-                202: onSuccess,
+                200: successCallback,
+                202: successCallback,
                 400: onFailure
             },
             success: function (response) {
@@ -952,6 +988,68 @@
             }
         });
         $.ajax(listGroups);
+    };
+
+    //Create a group
+    strata.groups.create = function (groupName, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (groupName === undefined) { onFailure("groupName must be defined"); }
+
+        var url = strataHostname.clone().setPath('/rs/groups');
+        url.addQueryParam(redhatClient, redhatClientID);
+
+        var throwError = function(xhr, response, status) {
+            onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, response, status);
+        };
+
+        createGroup = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'POST',
+            method: 'POST',
+            data: '{"name": "' + groupName + '"}',
+            success: onSuccess,
+            statusCode: {
+                201: function(response) {
+                    var locationHeader = response.getResponseHeader('Location');
+                    var groupNumber = 
+                        locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
+                    onSuccess(groupNumber);
+                },
+                400: throwError,
+                500: throwError
+            }
+        });
+        $.ajax(createGroup);
+    };
+
+    //Delete a group
+    strata.groups.delete = function (groupnum, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (groupnum === undefined) { onFailure("groupnum must be defined"); }
+
+        var url = strataHostname.clone().setPath('/rs/groups/' + groupnum);
+        url.addQueryParam(redhatClient, redhatClientID);
+
+        var throwError = function(xhr, response, status) {
+            onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, response, status);
+        };
+
+        deleteGroup = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'DELETE',
+            method: 'DELETE',
+            success: onSuccess,
+            statusCode: {
+                200: function(response) {
+                    onSuccess();
+                },
+                400: throwError,
+                500: throwError
+            }
+        });
+        $.ajax(deleteGroup);
     };
 
     //Retrieve a group
