@@ -70,7 +70,8 @@
         fetchAccounts,
         fetchAccount,
         fetchURI,
-        fetchAccountUsers;
+        fetchAccountUsers,
+        fetchEntitlements;
 
     strata.version = "1.0.12";
     redhatClientID = "stratajs-" + strata.version;
@@ -1394,6 +1395,23 @@
             }
         });
         $.ajax(fetchAccountUsers);
+    };
+
+    strata.entitlements = {};
+    strata.entitlements.get = function (showAll, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+
+        var url = strataHostname.clone().setPath('/rs/entitlements?showAll=' + showAll.toString());
+
+        fetchEntitlements = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchEntitlements);
     };
 
     //Helper function to "diagnose" text, chains problems and solutions calls
