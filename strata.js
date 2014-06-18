@@ -71,17 +71,21 @@
         fetchAccount,
         fetchURI,
         fetchAccountUsers,
-        fetchEntitlements;
+        fetchEntitlements,
+        authHostname,
+        fetchAccountUsers;
 
-    strata.version = "1.0.12";
+    strata.version = "1.0.13";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
         //if this is a chromed app this will work otherwise we default to prod
         portalHostname = new Uri(window.portal.host).host();
+        authHostname = portalHostname;
 
     } else {
         portalHostname = 'access.redhat.com';
+        authHostname = portalHostname;
     }
 
     strataHostname = new Uri('https://api.' + portalHostname);
@@ -89,14 +93,25 @@
 
     strata.setRedhatClientID = function (id) {
         redhatClientID = id;
-        strataHostname = new Uri('https://api.' + portalHostname);
+        strataHostname = new Uri(strataHostname);
         strataHostname.addQueryParam(redhatClient, redhatClientID);
     };
 
     strata.setStrataHostname = function (hostname) {
         portalHostname = hostname;
+        strataHostname = new Uri(portalHostname);
+        strataHostname.addQueryParam(redhatClient, redhatClientID);
+    };
+
+    strata.setPortalHostname = function (hostname) {
+        portalHostname = hostname;
+        authHostname = hostname;
         strataHostname = new Uri('https://api.' + portalHostname);
         strataHostname.addQueryParam(redhatClient, redhatClientID);
+    };
+
+    strata.setAuthHostname = function (hostname) {
+        authHostname = hostname;
     };
 
     strata.getAuthInfo = function () {
@@ -129,7 +144,7 @@
 
     strata.clearCookieAuth = function () {
         $("body").append("<iframe id='rhLogoutFrame' name='rhLogoutFrame' style='display: none;'></iframe>");
-        window.open("https://" + portalHostname + "/logout", "rhLogoutFrame");
+        window.open("https://" + authHostname + "/logout", "rhLogoutFrame");
     };
 
 
@@ -162,7 +177,7 @@
     };
 
     authAjaxParams = $.extend({
-        url: 'https://' + portalHostname +
+        url: 'https://' + authHostname +
             '/services/user/status?jsoncallback=?',
         dataType: 'jsonp'
     }, baseAjaxParams);
@@ -1013,7 +1028,7 @@
             statusCode: {
                 201: function(response) {
                     var locationHeader = response.getResponseHeader('Location');
-                    var groupNumber = 
+                    var groupNumber =
                         locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
                     onSuccess(groupNumber);
                 },
