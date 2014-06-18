@@ -311,6 +311,7 @@
             context: authedUser,
             success: function (response) {
                 this.name = response.first_name + ' ' + response.last_name;
+                this.is_internal = response.is_internal;
                 loginHandler(true, this);
             },
             error: function () {
@@ -336,6 +337,7 @@
                         },
                         //We are all good
                         success: function (response) {
+                            this.is_internal = response.internal;
                             loginHandler(true, this);
                         },
                         //We have an SSO Cookie but it's invalid
