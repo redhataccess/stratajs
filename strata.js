@@ -112,6 +112,11 @@
 
     strata.setAuthHostname = function (hostname) {
         authHostname = hostname;
+        authAjaxParams = $.extend({
+            url: 'https://' + authHostname +
+                '/services/user/status?jsoncallback=?',
+            dataType: 'jsonp'
+        }, baseAjaxParams);
     };
 
     strata.getAuthInfo = function () {
