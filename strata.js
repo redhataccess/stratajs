@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.14";
+    strata.version = "1.0.15";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -315,8 +315,8 @@
                 .addQueryParam('ssoUserName', authedUser.login),
             context: authedUser,
             success: function (response) {
+                this = response;
                 this.name = response.first_name + ' ' + response.last_name;
-                this.is_internal = response.is_internal;
                 loginHandler(true, this);
             },
             error: function () {
