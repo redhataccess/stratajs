@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.16";
+    strata.version = "1.0.17";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -346,7 +346,7 @@
                         },
                         //We are all good
                         success: function (response) {
-                            this.is_internal = response.internal;
+                            this.is_internal = response.is_internal;
                             loginHandler(true, this);
                         },
                         //We have an SSO Cookie but it's invalid
