@@ -357,6 +357,7 @@
                                     this.has_chat = response.has_chat;
                                     this.session_id = response.session_id;
                                     this.can_add_attachments = response.can_add_attachments;
+                                    loginHandler(true, this);
                                 },
                                 error: function () {
                                     strata.clearBasicAuth();
