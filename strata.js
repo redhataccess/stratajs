@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.17";
+    strata.version = "1.0.18";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -346,8 +346,24 @@
                         },
                         //We are all good
                         success: function (response) {
-                            this.is_internal = response.is_internal;
-                            loginHandler(true, this);
+                            checkCredentials = $.extend({}, baseAjaxParams, {
+                                url: strataHostname.clone().setPath('/rs/users')
+                                    .addQueryParam('ssoUserName', authedUser.login),
+                                context: authedUser,
+                                success: function (response) {
+                                    this.name = response.first_name + ' ' + response.last_name;
+                                    this.is_internal = response.is_internal;
+                                    this.org_admin = response.org_admin;
+                                    this.has_chat = response.has_chat;
+                                    this.session_id = response.session_id;
+                                    this.can_add_attachments = response.can_add_attachments;
+                                },
+                                error: function () {
+                                    strata.clearBasicAuth();
+                                    loginHandler(false);
+                                }
+                            });
+                            $.ajax(checkCredentials);
                         },
                         //We have an SSO Cookie but it's invalid
                         error: function () {
