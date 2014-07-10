@@ -1,7 +1,7 @@
 {
     "name": "stratajs",
     "description": "JavaScript Library to interact with the Red Hat Customer Portal API",
-    "version": "1.0.21",
+    "version": "1.0.22",
     "main": "strata.js",
     "repository": {
         "type": "git",

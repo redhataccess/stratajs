@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.21";
+    strata.version = "1.0.22";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -364,7 +364,7 @@
                                     this.has_chat = response.has_chat;
                                     this.session_id = response.session_id;
                                     this.can_add_attachments = response.can_add_attachments;
-                                    $.(checkCredentials);
+                                    $.ajax(checkCredentials);
                                 },
                                 error: function () {
                                     strata.clearBasicAuth();
