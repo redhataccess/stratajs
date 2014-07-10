@@ -1441,11 +1441,15 @@
     };
 
     strata.entitlements = {};
-    strata.entitlements.get = function (showAll, onSuccess, onFailure) {
+    strata.entitlements.get = function (showAll, onSuccess, onFailure, ssoUserName) {
         if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
         if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
 
-        var url = strataHostname.clone().setPath('/rs/entitlements?showAll=' + showAll.toString());
+        if (ssoUserName === undefined) {
+            var url = strataHostname.clone().setPath('/rs/entitlements?showAll=' + showAll.toString());
+        } else {
+            var url = strataHostname.clone().setPath('/rs/entitlements/contact/' + ssoUserName + '?showAll=' + showAll.toString());
+        }
 
         fetchEntitlements = $.extend({}, baseAjaxParams, {
             url: url,
