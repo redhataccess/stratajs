@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.20";
+    strata.version = "1.0.21";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -321,6 +321,13 @@
                 this.has_chat = response.has_chat;
                 this.session_id = response.session_id;
                 this.can_add_attachments = response.can_add_attachments;
+                this.account_id = response.account_id;
+                this.account_number = response.account_number;
+                this.authorized = response.authorized;
+                this.email = response.email;
+                this.internal = response.internal;
+                this.login = response.login;
+                this.user_id = response.user_id;
                 loginHandler(true, this);
             },
             error: function () {
@@ -357,7 +364,7 @@
                                     this.has_chat = response.has_chat;
                                     this.session_id = response.session_id;
                                     this.can_add_attachments = response.can_add_attachments;
-                                    loginHandler(true, this);
+                                    $.(checkCredentials);
                                 },
                                 error: function () {
                                     strata.clearBasicAuth();
