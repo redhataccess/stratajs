@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.22";
+    strata.version = "1.0.23";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -321,13 +321,6 @@
                 this.has_chat = response.has_chat;
                 this.session_id = response.session_id;
                 this.can_add_attachments = response.can_add_attachments;
-                this.account_id = response.account_id;
-                this.account_number = response.account_number;
-                this.authorized = response.authorized;
-                this.email = response.email;
-                this.internal = response.internal;
-                this.login = response.login;
-                this.user_id = response.user_id;
                 loginHandler(true, this);
             },
             error: function () {
@@ -353,25 +346,14 @@
                         },
                         //We are all good
                         success: function (response) {
-                            checkCredentials = $.extend({}, baseAjaxParams, {
-                                url: strataHostname.clone().setPath('/rs/users')
-                                    .addQueryParam('ssoUserName', authedUser.login),
-                                context: authedUser,
-                                success: function (response) {
-                                    this.name = response.first_name + ' ' + response.last_name;
-                                    this.is_internal = response.is_internal;
-                                    this.org_admin = response.org_admin;
-                                    this.has_chat = response.has_chat;
-                                    this.session_id = response.session_id;
-                                    this.can_add_attachments = response.can_add_attachments;
-                                    $.ajax(checkCredentials);
-                                },
-                                error: function () {
-                                    strata.clearBasicAuth();
-                                    loginHandler(false);
-                                }
-                            });
-                            $.ajax(checkCredentials);
+                            this.sso_username = response.sso_username;
+                            this.name = response.first_name + ' ' + response.last_name;
+                            this.is_internal = response.is_internal;
+                            this.org_admin = response.org_admin;
+                            this.has_chat = response.has_chat;
+                            this.session_id = response.session_id;
+                            this.can_add_attachments = response.can_add_attachments;
+                            loginHandler(true, this);
                         },
                         //We have an SSO Cookie but it's invalid
                         error: function () {
