@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.23";
+    strata.version = "1.0.24";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -128,12 +128,20 @@
     authedUser.login = localStorage.getItem("rhUserName");
 
     strata.setCredentials = function (username, password, handleLogin) {
-        basicAuthToken = btoa(username + ":" + password);
-        localStorage.setItem("rhAuthToken", basicAuthToken);
-        localStorage.setItem("rhUserName", username);
-        authedUser.login = username;
-        strata.checkLogin(handleLogin);
+        if(isASCII(username + password)){
+            basicAuthToken = btoa(username + ":" + password);
+            localStorage.setItem("rhAuthToken", basicAuthToken);
+            localStorage.setItem("rhUserName", username);
+            authedUser.login = username;
+            strata.checkLogin(handleLogin);
+        } else{
+            handleLogin(false);
+        }
     };
+
+    function isASCII(str) {
+        return /^[\x00-\x7F]*$/.test(str);
+    }
 
     strata.clearCredentials = function () {
         strata.clearBasicAuth();
