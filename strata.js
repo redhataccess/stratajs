@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.24";
+    strata.version = "1.0.25";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -691,9 +691,9 @@
         fetchCases = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                if (response.case !== undefined) {
-                    response.case.forEach(convertDates);
-                    onSuccess(response.case);
+                if (response['case'] !== undefined) {
+                    response['case'].forEach(convertDates);
+                    onSuccess(response['case']);
                 } else {
                     onSuccess([]);
                 }
@@ -805,9 +805,9 @@
             type: 'POST',
             method: 'POST',
             success: function (response) {
-                if (response.case !== undefined) {
-                    response.case.forEach(convertDates);
-                    onSuccess(response.case);
+                if (response['case'] !== undefined) {
+                    response['case'].forEach(convertDates);
+                    onSuccess(response['case']);
                 } else {
                     onSuccess([]);
                 }
@@ -948,7 +948,7 @@
         $.ajax(createAttachment);
     };
 
-    strata.cases.attachments.delete = function (attachmentId, casenum, onSuccess, onFailure) {
+    strata.cases.attachments.remove = function (attachmentId, casenum, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
         if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
         if (attachmentId === undefined) { onFailure("attachmentId must be defined"); }
@@ -1065,7 +1065,7 @@
     };
 
     //Delete a group
-    strata.groups.delete = function (groupnum, onSuccess, onFailure) {
+    strata.groups.remove = function (groupnum, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
         if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
         if (groupnum === undefined) { onFailure("groupnum must be defined"); }
