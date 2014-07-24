@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.25";
+    strata.version = "1.0.26";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -1484,6 +1484,7 @@
         var searchStrata = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/search')
                 .addQueryParam('keyword', encodeURIComponent(keyword))
+                .addQueryParam('contentType', 'article,solution')
                 .addQueryParam('limit', limit),
             success: function (response) {
                 if (chain && response.search_result !== undefined) {
