@@ -19,7 +19,6 @@
     'use strict';
     if (typeof define === 'function' && define.amd) {
         define('strata', ['jquery', 'jsUri'], factory);
-        });
     } else {
         root.strata = factory(root.$, root.Uri);
     }
