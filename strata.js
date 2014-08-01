@@ -18,8 +18,7 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define('strata', ['jquery', 'jsUri'], function($, uri){
-            root.strata = factory($, uri);
+        define('strata', ['jquery', 'jsUri'], factory);
         });
     } else {
         root.strata = factory(root.$, root.Uri);
@@ -77,7 +76,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.27";
+    strata.version = "1.0.28";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
