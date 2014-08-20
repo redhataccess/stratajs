@@ -88,6 +88,10 @@
         authHostname = portalHostname;
     }
 
+    if(localStorage && localStorage.getItem('portalHostname')) {
+        portalHostname = localStorage.getItem('portalHostname');
+    }
+
     strataHostname = new Uri('https://api.' + portalHostname);
     strataHostname.addQueryParam(redhatClient, redhatClientID);
 
