@@ -75,7 +75,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.29";
+    strata.version = "1.0.30";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
