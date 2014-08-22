@@ -401,7 +401,7 @@
             method: 'POST',
             contentType: 'text/plain',
             success: function (response) {
-                if (response.source_or_link_or_problem[2].source_or_link !== undefined) {
+                if (response.source_or_link_or_problem[2] !== undefined && response.source_or_link_or_problem[2].source_or_link !== undefined) {
                     //Gets the array of solutions
                     var suggestedSolutions = response.source_or_link_or_problem[2].source_or_link;
                     onSuccess(suggestedSolutions);
