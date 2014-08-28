@@ -70,12 +70,11 @@
         fetchAccounts,
         fetchAccount,
         fetchURI,
-        fetchAccountUsers,
         fetchEntitlements,
         authHostname,
         fetchAccountUsers;
 
-    strata.version = "1.0.32";
+    strata.version = "1.0.33";
     redhatClientID = "stratajs-" + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -131,7 +130,7 @@
     basicAuthToken = localStorage.getItem("rhAuthToken");
     authedUser.login = localStorage.getItem("rhUserName");
 
-    strata.setCredentials = function (username, password ) {
+    strata.setCredentials = function (username, password) {
         if(isASCII(username + password)){
             basicAuthToken = btoa(username + ":" + password);
             localStorage.setItem("rhAuthToken", basicAuthToken);
