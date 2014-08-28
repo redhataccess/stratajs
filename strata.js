@@ -131,15 +131,15 @@
     basicAuthToken = localStorage.getItem("rhAuthToken");
     authedUser.login = localStorage.getItem("rhUserName");
 
-    strata.setCredentials = function (username, password, handleLogin) {
+    strata.setCredentials = function (username, password ) {
         if(isASCII(username + password)){
             basicAuthToken = btoa(username + ":" + password);
             localStorage.setItem("rhAuthToken", basicAuthToken);
             localStorage.setItem("rhUserName", username);
             authedUser.login = username;
-            strata.checkLogin(handleLogin);
+            return true;
         } else{
-            handleLogin(false);
+            return false;
         }
     };
 
