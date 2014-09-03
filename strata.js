@@ -421,6 +421,37 @@
         $.ajax(getSolutionsFromText);
     };
 
+    strata.recommendations = function (data, onSuccess, onFailure, limit) {
+        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
+        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
+        if (data === undefined) { data = ""; }
+        if (limit === undefined) { limit = 50; }
+
+        var getRecommendationsFromText = $.extend({}, baseAjaxParams, {
+            url: strataHostname.clone().setPath('/rs/problems')
+                .addQueryParam('limit', limit),
+            data: data,
+            type: 'POST',
+            method: 'POST',
+            contentType: 'text/plain',
+            headers: {
+                Accept: 'application/vnd.redhat.json.suggestions'
+            },
+            success: function (response) {
+                if(response.recommendation !== undefined){
+                    var suggestedRecommendations = response.recommendation;
+                    onSuccess(suggestedRecommendations);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(getRecommendationsFromText);
+    };
+
     //Base for solutions
     strata.solutions = {};
 
