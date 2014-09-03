@@ -159,8 +159,14 @@
     };
 
     strata.clearCookieAuth = function () {
-        $('body').append('<iframe id="rhLogoutFrame" name="rhLogoutFrame" style="display: none;"></iframe>');
-        window.open('https://' + authHostname + '/logout', 'rhLogoutFrame');
+        var logoutFrame = document.getElementById('rhLogoutFrame');
+        if (!logoutFrame) {
+            // First time logging out.
+            $('body').append('<iframe id="rhLogoutFrame" src="https://' + authHostname + '/logout" name="rhLogoutFrame" style="display: none;"></iframe>');
+        } else {
+            // Will force the iframe to reload
+            logoutFrame.src = logoutFrame.src;
+        }
     };
 
 
