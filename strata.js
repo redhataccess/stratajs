@@ -74,7 +74,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = '1.0.34';
+    strata.version = '1.0.36';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -96,8 +96,7 @@
 
     strata.setRedhatClientID = function (id) {
         redhatClientID = id;
-        strataHostname = new Uri(strataHostname);
-        strataHostname.addQueryParam(redhatClient, redhatClientID);
+        strataHostname.replaceQueryParam(redhatClient, redhatClientID);
     };
 
     strata.setStrataHostname = function (hostname) {
