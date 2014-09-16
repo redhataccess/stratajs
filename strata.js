@@ -57,6 +57,8 @@
         listGroups,
         createGroup,
         deleteGroup,
+        updateGroup,
+        updateGroupUsers,
         fetchGroup,
         listProducts,
         fetchProduct,
@@ -74,7 +76,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = '1.0.38';
+    strata.version = '1.0.39';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -1109,6 +1111,38 @@
         $.ajax(createGroup);
     };
 
+    //Update a group
+    strata.groups.update = function (groupName, groupnum, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (groupName === undefined || groupnum === undefined ) { onFailure('groupName and groupnum must be defined'); }
+
+        var url = strataHostname.clone().setPath('/rs/groups/' + groupnum);
+
+        var throwError = function(xhr, response, status) {
+            onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+        };
+
+        updateGroup = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'PUT',
+            method: 'PUT',
+            data: '{"name": "' + groupName + '", "number": "' + groupnum + '"}',
+            success: onSuccess,
+            statusCode: {
+                200: function(response) {
+                    var locationHeader = response.getResponseHeader('Location');
+                    var groupNumber =
+                        locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
+                    onSuccess(groupNumber);
+                },
+                400: throwError,
+                500: throwError
+            }
+        });
+        $.ajax(updateGroup);
+    };
+
     //Delete a group
     strata.groups.remove = function (groupnum, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
@@ -1132,7 +1166,8 @@
                     onSuccess();
                 },
                 400: throwError,
-                500: throwError
+                500: throwError,
+                502: throwError
             }
         });
         $.ajax(deleteGroup);
@@ -1160,6 +1195,38 @@
             }
         });
         $.ajax(fetchGroup);
+    };
+
+    //Base for groupUsers
+    strata.groupUsers = {};
+    //Update a group
+    strata.groupUsers.update = function (users, accountId, groupnum, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (users === undefined || users === accountId || users === groupnum) { onFailure('users, accountID and groupnum must be defined'); }
+
+        var url = strataHostname.clone().setPath('/rs/account/'+ accountId + '/groups/' + groupnum + '/users');
+
+        var throwError = function(xhr, response, status) {
+            onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+        };
+
+        updateGroupUsers = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'PUT',
+            method: 'PUT',
+            data: JSON.stringify(strata.utils.fixUsersObject(users)),
+            success: onSuccess,
+            statusCode: {
+                200: function(response) {
+                    onSuccess();
+                },
+                400: throwError,
+                500: throwError,
+                502: throwError
+            }
+        });
+        $.ajax(updateGroupUsers);
     };
 
     //Base for products
@@ -1578,6 +1645,22 @@
             }
         });
         $.ajax(fetchURI);
+    };
+
+    strata.utils.fixUsersObject = function (oldUsers) {
+        var users = {};
+        users.user = [];
+        for(var i = 0; i < oldUsers.length; i++){
+            var tempUser = {
+                ssoUsername : oldUsers[i].sso_username,
+                firstName : oldUsers[i].first_name,
+                lastName : oldUsers[i].last_name,
+                access : oldUsers[i].access,
+                write : oldUsers[i].write
+            };
+            users.user.push(tempUser);
+        }
+        return users;
     };
 
     return strata;
