@@ -76,7 +76,7 @@
         authHostname,
         fetchAccountUsers;
 
-    strata.version = '1.0.39';
+    strata.version = '1.0.40';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -1112,12 +1112,12 @@
     };
 
     //Update a group
-    strata.groups.update = function (groupName, groupnum, onSuccess, onFailure) {
+    strata.groups.update = function (group, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        if (groupName === undefined || groupnum === undefined ) { onFailure('groupName and groupnum must be defined'); }
+        if (group === undefined) { onFailure('group must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/groups/' + groupnum);
+        var url = strataHostname.clone().setPath('/rs/groups/' + group.number);
 
         var throwError = function(xhr, response, status) {
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
@@ -1127,7 +1127,7 @@
             url: url,
             type: 'PUT',
             method: 'PUT',
-            data: '{"name": "' + groupName + '", "number": "' + groupnum + '"}',
+            data: group,
             success: onSuccess,
             statusCode: {
                 200: function(response) {
@@ -1135,6 +1135,35 @@
                     var groupNumber =
                         locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
                     onSuccess(groupNumber);
+                },
+                400: throwError,
+                500: throwError
+            }
+        });
+        $.ajax(updateGroup);
+    };
+
+    //Update a group
+    strata.groups.createDefault = function (group, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (group === undefined) { onFailure('group must be defined'); }
+
+        var url = strataHostname.clone().setPath('/rs/groups/' + group.number + '/default/');
+
+        var throwError = function(xhr, response, status) {
+            onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+        };
+
+        updateGroup = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'POST',
+            method: 'POST',
+            data: JSON.stringify(group),
+            success: onSuccess,
+            statusCode: {
+                200: function(response) {
+                    onSuccess();
                 },
                 400: throwError,
                 500: throwError
