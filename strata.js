@@ -154,8 +154,9 @@
 
     strata.clearCredentials = function () {
         strata.clearBasicAuth();
-        strata.clearCookieAuth();
-        authedUser = {};
+        strata.clearCookieAuth().always(function() {
+            authedUser = {};
+        });
     };
 
     strata.clearBasicAuth = function () {
@@ -165,14 +166,7 @@
     };
 
     strata.clearCookieAuth = function () {
-        var logoutFrame = document.getElementById('rhLogoutFrame');
-        if (!logoutFrame) {
-            // First time logging out.
-            $('body').append('<iframe id="rhLogoutFrame" src="https://' + authHostname + '/logout" name="rhLogoutFrame" style="display: none;"></iframe>');
-        } else {
-            // Will force the iframe to reload
-            logoutFrame.src = logoutFrame.src;
-        }
+        return $.post('https://signout-redhataccess.itos.redhat.com');
     };
 
 
@@ -380,15 +374,17 @@
                         },
                         //We have an SSO Cookie but it's invalid
                         error: function () {
-                            strata.clearCookieAuth();
-                            loginHandler(false);
+                            strata.clearCookieAuth().always(function() {
+                                loginHandler(false);
+                            });
                         }
                     });
                     //Check /rs/users?ssoUserName=sso-id
                     $.ajax(checkCredentialsNoBasic);
                 } else {
-                    strata.clearCookieAuth();
-                    $.ajax(checkCredentials);
+                     strata.clearCookieAuth().always(function() {
+                        $.ajax(checkCredentials);
+                     });
                 }
             }
         }, authAjaxParams);
