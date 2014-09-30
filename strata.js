@@ -849,7 +849,7 @@
             success: function (response) {
                 if (response['case'] !== undefined) {
                     response['case'].forEach(convertDates);
-                    onSuccess(response['case']);
+                    onSuccess(response);
                 } else {
                     onSuccess([]);
                 }
