@@ -35,9 +35,10 @@
         portalHostname,
         strataHostname,
         baseAjaxParams = {},
-        authAjaxParams,
+//        authAjaxParams,
         checkCredentials,
         checkCredentialsNoBasic,
+        fetchUser,
         fetchSolution,
         fetchArticle,
         searchArticles,
@@ -73,20 +74,17 @@
         fetchAccount,
         fetchURI,
         fetchEntitlements,
-        authHostname,
         fetchAccountUsers;
 
-    strata.version = '1.0.41';
+    strata.version = '1.1.2';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
         //if this is a chromed app this will work otherwise we default to prod
         portalHostname = new Uri(window.portal.host).host();
-        authHostname = portalHostname;
 
     } else {
-        portalHostname = 'access.redhat.com';
-        authHostname = portalHostname;
+        portalHostname = 'access.devgssci.devlab.phx1.redhat.com';
     }
 
     if(localStorage && localStorage.getItem('portalHostname')) {
@@ -114,18 +112,8 @@
 
     strata.setPortalHostname = function (hostname) {
         portalHostname = hostname;
-        authHostname = hostname;
         strataHostname = new Uri('https://api.' + portalHostname);
         strataHostname.addQueryParam(redhatClient, redhatClientID);
-    };
-
-    strata.setAuthHostname = function (hostname) {
-        authHostname = hostname;
-        authAjaxParams = $.extend({
-            url: 'https://' + authHostname +
-                '/services/user/status?jsoncallback=?',
-            dataType: 'jsonp'
-        }, baseAjaxParams);
     };
 
     strata.getAuthInfo = function () {
@@ -193,16 +181,9 @@
         xhrFields: {
             withCredentials: true
         },
-        contentType: 'application/json',
         data: {},
         dataType: 'json'
     };
-
-    authAjaxParams = $.extend({
-        url: 'https://' + authHostname +
-            '/services/user/status?jsoncallback=?',
-        dataType: 'jsonp'
-    }, baseAjaxParams);
 
     //Helper Functions
     //Convert Java Calendar class to something we can use
@@ -328,69 +309,23 @@
         if (!$.isFunction(loginHandler)) { throw 'loginHandler callback must be supplied'; }
 
         checkCredentials = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/users')
-                .addQueryParam('ssoUserName', authedUser.login),
-            context: authedUser,
+            url: strataHostname.clone().setPath('/rs/users/current'),
+            headers: {
+                accept: 'application/vnd.redhat.user+json'
+               
+            },
             success: function (response) {
-                this.name = response.first_name + ' ' + response.last_name;
-                this.is_internal = response.is_internal;
-                this.org_admin = response.org_admin;
-                this.has_chat = response.has_chat;
-                this.session_id = response.session_id;
-                this.can_add_attachments = response.can_add_attachments;
-                loginHandler(true, this);
+                response.loggedInUser = response.first_name + ' ' + response.last_name;
+                loginHandler(true, response);
             },
             error: function () {
                 strata.clearBasicAuth();
-                loginHandler(false);
+                strata.clearCookieAuth().always(function() {
+                    loginHandler(false);
+                });
             }
         });
-
-        var loginParams = $.extend({
-            context: authedUser,
-            success: function (response) {
-                //We have an SSO Cookie, check that it's still valid
-                if (response.authorized) {
-                    //Copy into our private obj
-                    authedUser = response;
-                    //Needs to be here so authedUser.login will resolve
-                    checkCredentialsNoBasic = $.extend({}, baseAjaxParams, {
-                        context: authedUser,
-                        url: strataHostname.clone().setPath('/rs/users')
-                            .addQueryParam('ssoUserName', authedUser.login),
-                        beforeSend: function (xhr) {
-                            xhr.setRequestHeader('X-Omit', 'WWW-Authenticate');
-                        },
-                        //We are all good
-                        success: function (response) {
-                            this.sso_username = response.sso_username;
-                            this.name = response.first_name + ' ' + response.last_name;
-                            this.is_internal = response.is_internal;
-                            this.org_admin = response.org_admin;
-                            this.has_chat = response.has_chat;
-                            this.session_id = response.session_id;
-                            this.can_add_attachments = response.can_add_attachments;
-                            loginHandler(true, this);
-                        },
-                        //We have an SSO Cookie but it's invalid
-                        error: function () {
-                            strata.clearCookieAuth().always(function() {
-                                loginHandler(false);
-                            });
-                        }
-                    });
-                    //Check /rs/users?ssoUserName=sso-id
-                    $.ajax(checkCredentialsNoBasic);
-                } else {
-                     strata.clearCookieAuth().always(function() {
-                        $.ajax(checkCredentials);
-                     });
-                }
-            }
-        }, authAjaxParams);
-
-        //Check if we have an SSO Cookie
-        $.ajax(loginParams);
+        $.ajax(checkCredentials);
     };
 
     //Sends data to the strata diagnostic toolchain
@@ -452,6 +387,31 @@
             }
         });
         $.ajax(getRecommendationsFromText);
+    };
+
+    //Base for users
+    strata.users = {};
+    strata.users.get = function (onSuccess, onFailure, userId) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (userId === undefined) { 
+            userId = 'current'
+        }
+
+        fetchUser = $.extend({}, baseAjaxParams, {
+            url: strataHostname.clone().setPath('/rs/users/' + userId),
+            headers: {
+                accept: 'application/vnd.redhat.user+json'
+               
+            },
+            success: function (response) {
+                onSuccess(response);
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchUser);
     };
 
     //Base for solutions
@@ -641,6 +601,7 @@
             url: url,
             type: 'PUT',
             method: 'PUT',
+            contentType: 'application/json',
             data: JSON.stringify(comment),
             statusCode: {
                 200: function(response) {
@@ -704,6 +665,7 @@
             data: JSON.stringify(casecomment),
             type: 'POST',
             method: 'POST',
+            contentType: 'application/json',
             success: function (response, status, xhr) {
                 //Created case comment data is in the XHR
                 var commentnum = xhr.getResponseHeader('Location');
@@ -767,6 +729,7 @@
             data: '{"user": [{"ssoUsername":"' + ssoUserName + '"}]}',
             type: 'POST',
             method: 'POST',
+            contentType: 'application/json',
             headers: {
                 Accept: 'text/plain'
             },
@@ -844,6 +807,7 @@
         filterCases = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify(casefilter),
+            contentType: 'application/json',
             type: 'POST',
             method: 'POST',
             success: function (response) {
@@ -875,6 +839,7 @@
             data: JSON.stringify(casedata),
             type: 'POST',
             method: 'POST',
+            contentType: 'application/json',
             success: function (response, status, xhr) {
                 //Created case data is in the XHR
                 var casenum = xhr.getResponseHeader('Location');
@@ -913,6 +878,7 @@
             data: JSON.stringify(casedata),
             type: 'PUT',
             method: 'PUT',
+            contentType: 'application/json',
             statusCode: {
                 200: successCallback,
                 202: successCallback,
@@ -1091,6 +1057,7 @@
             url: url,
             type: 'POST',
             method: 'POST',
+            contentType: 'application/json',
             data: '{"name": "' + groupName + '"}',
             success: onSuccess,
             statusCode: {
@@ -1123,6 +1090,7 @@
             url: url,
             type: 'PUT',
             method: 'PUT',
+            contentType: 'application/json',
             data: group,
             success: onSuccess,
             statusCode: {
@@ -1155,6 +1123,7 @@
             url: url,
             type: 'POST',
             method: 'POST',
+            contentType: 'application/json',
             data: JSON.stringify(group),
             success: onSuccess,
             statusCode: {
@@ -1240,6 +1209,7 @@
             url: url,
             type: 'PUT',
             method: 'PUT',
+            contentType: 'application/json',
             data: JSON.stringify(strata.utils.fixUsersObject(users)),
             success: onSuccess,
             statusCode: {
@@ -1484,6 +1454,7 @@
             data: JSON.stringify(systemprofile),
             type: 'POST',
             method: 'POST',
+            contentType: 'application/json',
             success: function (response, status, xhr) {
                 //Created case data is in the XHR
                 var hash = xhr.getResponseHeader('Location');
