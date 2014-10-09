@@ -1,4 +1,4 @@
-/*jslint browser: true, devel: true, todo: true, unparam: true */
+/*jslint browser: true, devel: true, todo: true, unparam: true, camelcase: false */
 /*global define, btoa, Markdown */
 /*
  Copyright 2014 Red Hat Inc.
@@ -35,9 +35,7 @@
         portalHostname,
         strataHostname,
         baseAjaxParams = {},
-//        authAjaxParams,
         checkCredentials,
-        checkCredentialsNoBasic,
         fetchUser,
         fetchSolution,
         fetchArticle,
@@ -74,9 +72,10 @@
         fetchAccount,
         fetchURI,
         fetchEntitlements,
-        fetchAccountUsers;
+        fetchAccountUsers,
+        fetchUserChatSession;
 
-    strata.version = '1.1.2';
+    strata.version = '1.1.3';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -359,9 +358,9 @@
     };
 
     strata.recommendations = function (data, onSuccess, onFailure, limit) {
-        if (!$.isFunction(onSuccess)) { throw "onSuccess callback must be a function"; }
-        if (!$.isFunction(onFailure)) { throw "onFailure callback must be a function"; }
-        if (data === undefined) { data = ""; }
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (data === undefined) { data = ''; }
         if (limit === undefined) { limit = 50; }
 
         var getRecommendationsFromText = $.extend({}, baseAjaxParams, {
@@ -383,7 +382,7 @@
                 }
             },
             error: function (xhr, reponse, status) {
-                onFailure("Error " + xhr.status + " " + xhr.statusText, xhr, reponse, status);
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
         $.ajax(getRecommendationsFromText);
@@ -391,11 +390,12 @@
 
     //Base for users
     strata.users = {};
+    strata.users.chatSession = {};
     strata.users.get = function (onSuccess, onFailure, userId) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (userId === undefined) { 
-            userId = 'current'
+            userId = 'current';
         }
 
         fetchUser = $.extend({}, baseAjaxParams, {
@@ -412,6 +412,29 @@
             }
         });
         $.ajax(fetchUser);
+    };
+
+    strata.users.chatSession.get = function (onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+
+        fetchUserChatSession = $.extend({}, baseAjaxParams, {
+            url: strataHostname.clone().setPath('/rs/users/current/chatSession'),
+            type: 'POST',
+            method: 'POST',
+            headers: {
+                accept: 'application/json'
+               
+            },
+            success: function (response) {
+                onSuccess(response);
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchUserChatSession);
     };
 
     //Base for solutions
@@ -604,7 +627,7 @@
             contentType: 'application/json',
             data: JSON.stringify(comment),
             statusCode: {
-                200: function(response) {
+                200: function() {
                   onSuccess();
                 },
                 400: onFailure
@@ -781,7 +804,7 @@
             url: url,
             contentType: 'text/csv',
             dataType: 'text',
-            success: function(data, response, status) {
+            success: function(data) {
                 var uri = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(data);
                 window.location = uri;
                 onSuccess();
@@ -1127,7 +1150,7 @@
             data: JSON.stringify(group),
             success: onSuccess,
             statusCode: {
-                200: function(response) {
+                200: function() {
                     onSuccess();
                 },
                 400: throwError,
@@ -1156,7 +1179,7 @@
             method: 'DELETE',
             success: onSuccess,
             statusCode: {
-                200: function(response) {
+                200: function() {
                     onSuccess();
                 },
                 400: throwError,
@@ -1213,7 +1236,7 @@
             data: JSON.stringify(strata.utils.fixUsersObject(users)),
             success: onSuccess,
             statusCode: {
-                200: function(response) {
+                200: function() {
                     onSuccess();
                 },
                 400: throwError,
@@ -1232,11 +1255,10 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
+        var url = strataHostname.clone().setPath('/rs/products/contact/' + ssoUserName);
         if (ssoUserName === undefined) {
-            var url = strataHostname.clone().setPath('/rs/products');
-        } else {
-            var url = strataHostname.clone().setPath('/rs/products/contact/' + ssoUserName);
-        }
+            url = strataHostname.clone().setPath('/rs/products');
+        } 
 
 
         listProducts = $.extend({}, baseAjaxParams, {
