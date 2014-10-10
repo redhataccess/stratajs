@@ -402,7 +402,6 @@
             url: strataHostname.clone().setPath('/rs/users/' + userId),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
-               
             },
             success: function (response) {
                 onSuccess(response);
@@ -425,7 +424,6 @@
             method: 'POST',
             headers: {
                 accept: 'application/json'
-               
             },
             success: function (response) {
                 onSuccess(response);
@@ -1259,7 +1257,6 @@
         if (ssoUserName === undefined) {
             url = strataHostname.clone().setPath('/rs/products');
         } 
-
 
         listProducts = $.extend({}, baseAjaxParams, {
             url: url,
