@@ -75,7 +75,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.3';
+    strata.version = '1.1.4';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -688,9 +688,15 @@
             method: 'POST',
             contentType: 'application/json',
             success: function (response, status, xhr) {
-                //Created case comment data is in the XHR
-                var commentnum = xhr.getResponseHeader('Location');
-                commentnum = commentnum.split('/').pop();
+                var commentnum;
+                if(response.id !== undefined){
+                    //For some reason the comment object is being returned in IE8
+                    commentnum = response.id;
+                } else{
+                    //Created case comment data is in the XHR
+                    commentnum = xhr.getResponseHeader('Location');
+                    commentnum = commentnum.split('/').pop();
+                }
                 onSuccess(commentnum);
             },
             error: function (xhr, reponse, status) {
