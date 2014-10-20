@@ -75,7 +75,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.4';
+    strata.version = '1.1.5';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -83,7 +83,7 @@
         portalHostname = new Uri(window.portal.host).host();
 
     } else {
-        portalHostname = 'access.devgssci.devlab.phx1.redhat.com';
+        portalHostname = 'access.redhat.com';
     }
 
     if(localStorage && localStorage.getItem('portalHostname')) {
