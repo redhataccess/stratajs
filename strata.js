@@ -141,9 +141,8 @@
 
     strata.clearCredentials = function () {
         strata.clearBasicAuth();
-        strata.clearCookieAuth().always(function() {
-            authedUser = {};
-        });
+        strata.clearCookieAuth();
+        authedUser = {};
     };
 
     strata.clearBasicAuth = function () {
@@ -153,7 +152,14 @@
     };
 
     strata.clearCookieAuth = function () {
-        return $.post('https://signout-redhataccess.itos.redhat.com');
+        var logoutFrame = document.getElementById('rhLogoutFrame');
+        if (!logoutFrame) {
+            // First time logging out.
+            $('body').append('<iframe id="rhLogoutFrame" src="https://' + authHostname + '/logout" name="rhLogoutFrame" style="display: none;"></iframe>');
+        } else {
+            // Will force the iframe to reload
+            logoutFrame.src = logoutFrame.src;
+        }
     };
 
 
@@ -311,7 +317,6 @@
             url: strataHostname.clone().setPath('/rs/users/current'),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
-               
             },
             success: function (response) {
                 response.loggedInUser = response.first_name + ' ' + response.last_name;
@@ -319,9 +324,8 @@
             },
             error: function () {
                 strata.clearBasicAuth();
-                strata.clearCookieAuth().always(function() {
-                    loginHandler(false);
-                });
+                strata.clearCookieAuth();
+                loginHandler(false);
             }
         });
         $.ajax(checkCredentials);
@@ -394,7 +398,7 @@
     strata.users.get = function (onSuccess, onFailure, userId) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        if (userId === undefined) { 
+        if (userId === undefined) {
             userId = 'current';
         }
 
@@ -1262,7 +1266,7 @@
         var url = strataHostname.clone().setPath('/rs/products/contact/' + ssoUserName);
         if (ssoUserName === undefined) {
             url = strataHostname.clone().setPath('/rs/products');
-        } 
+        }
 
         listProducts = $.extend({}, baseAjaxParams, {
             url: url,
