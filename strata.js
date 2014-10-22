@@ -75,7 +75,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.5';
+    strata.version = '1.1.6';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -693,9 +693,12 @@
             contentType: 'application/json',
             success: function (response, status, xhr) {
                 var commentnum;
-                if(response.id !== undefined){
+                if (response.id !== undefined){
                     //For some reason the comment object is being returned in IE8
                     commentnum = response.id;
+                } else if (response.location !== undefined && response.location[0] !== undefined){
+                    commentnum = response.location[0];
+                    commentnum = commentnum.split('/').pop();
                 } else{
                     //Created case comment data is in the XHR
                     commentnum = xhr.getResponseHeader('Location');
@@ -872,9 +875,15 @@
             method: 'POST',
             contentType: 'application/json',
             success: function (response, status, xhr) {
-                //Created case data is in the XHR
-                var casenum = xhr.getResponseHeader('Location');
-                casenum = casenum.split('/').pop();
+                 //Created case data is in the XHR
+                var casenum;
+                if (response.location !== undefined && response.location[0] !== undefined){
+                    casenum = response.location[0];
+                    casenum = casenum.split('/').pop();
+                } else{
+                    casenum = xhr.getResponseHeader('Location');
+                    casenum = casenum.split('/').pop();
+                }
                 onSuccess(casenum);
             },
             error: function (xhr, reponse, status) {
