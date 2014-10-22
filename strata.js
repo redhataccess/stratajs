@@ -155,7 +155,7 @@
         var logoutFrame = document.getElementById('rhLogoutFrame');
         if (!logoutFrame) {
             // First time logging out.
-            $('body').append('<iframe id="rhLogoutFrame" src="https://' + authHostname + '/logout" name="rhLogoutFrame" style="display: none;"></iframe>');
+            $('body').append('<iframe id="rhLogoutFrame" src="https://' + portalHostname + '/logout" name="rhLogoutFrame" style="display: none;"></iframe>');
         } else {
             // Will force the iframe to reload
             logoutFrame.src = logoutFrame.src;
