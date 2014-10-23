@@ -75,7 +75,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.6';
+    strata.version = '1.1.7';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -361,15 +361,21 @@
         $.ajax(getSolutionsFromText);
     };
 
-    strata.recommendations = function (data, onSuccess, onFailure, limit) {
+    strata.recommendations = function (data, onSuccess, onFailure, limit, highlight, highlightTags) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (data === undefined) { data = ''; }
         if (limit === undefined) { limit = 50; }
+        if (highlight === undefined) { highlight = false; }
+
+        var tmpUrl = strataHostname.clone().setPath('/rs/problems')
+                .addQueryParam('limit', limit).addQueryParam('highlight', highlight);
+        if(highlightTags !== undefined){
+            tmpUrl.addQueryParam('highlightTags', highlightTags);
+        }
 
         var getRecommendationsFromText = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/problems')
-                .addQueryParam('limit', limit),
+            url: tmpUrl,
             data: data,
             type: 'POST',
             method: 'POST',
