@@ -51,6 +51,7 @@
         filterCases,
         createAttachment,
         deleteAttachment,
+        updateOwner,
         listCaseAttachments,
         getSymptomsFromText,
         listGroups,
@@ -582,6 +583,7 @@
     strata.cases.attachments = {};
     strata.cases.comments = {};
     strata.cases.notified_users = {};
+    strata.cases.owner = {};
 
     //Retrieve a case
     strata.cases.get = function (casenum, onSuccess, onFailure) {
@@ -1022,6 +1024,28 @@
             }
         });
         $.ajax(deleteAttachment);
+    };
+
+    //Change the case owner
+    strata.cases.owner.update = function (casenum, ssoUserName, onSuccess, onFailure) {
+        //Default parameter value
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (casenum === undefined) { onFailure('casenum must be defined'); }
+
+        var url = strataHostname.clone().setPath('/rs/internal/cases/' + casenum + '/changeowner').addQueryParam('contactSsoName', ssoUserName.toString());
+
+        updateOwner = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'POST',
+            method: 'POST',
+            contentType: false,
+            success: onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(updateOwner);
     };
 
     //Base for symptoms
