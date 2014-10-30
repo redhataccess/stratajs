@@ -76,7 +76,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.8';
+    strata.version = '1.1.9';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -377,10 +377,10 @@
 
         var getRecommendationsFromText = $.extend({}, baseAjaxParams, {
             url: tmpUrl,
-            data: data,
+            data: JSON.stringify(data),
             type: 'POST',
             method: 'POST',
-            contentType: 'text/plain',
+            contentType: 'application/json',
             headers: {
                 Accept: 'application/vnd.redhat.json.suggestions'
             },
@@ -934,6 +934,9 @@
             },
             success: function (response) {
                 onSuccess(response);
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
         $.ajax(updateCase);
