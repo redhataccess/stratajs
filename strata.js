@@ -76,7 +76,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.10';
+    strata.version = '1.1.11';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -1141,10 +1141,8 @@
                     onSuccess(groupNumber);
                 },
                 400: throwError,
+                409: throwError,
                 500: throwError
-            },
-            error: function (xhr, reponse, status) {
-                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
         $.ajax(createGroup);
