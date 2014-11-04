@@ -76,7 +76,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.11';
+    strata.version = '1.1.12';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -1135,9 +1135,12 @@
             success: onSuccess,
             statusCode: {
                 201: function(response) {
-                    var locationHeader = response.getResponseHeader('Location');
-                    var groupNumber =
-                        locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
+                    var groupNumber;
+                    if(response !== undefined){}
+                        var locationHeader = response.getResponseHeader('Location');
+                        groupNumber =
+                            locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
+                    }
                     onSuccess(groupNumber);
                 },
                 400: throwError,
