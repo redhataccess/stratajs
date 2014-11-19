@@ -73,6 +73,7 @@
         fetchAccount,
         fetchURI,
         fetchEntitlements,
+        fetchSfdcHealth,
         fetchAccountUsers,
         fetchUserChatSession;
 
@@ -1736,6 +1737,27 @@
             }
         });
         $.ajax(searchStrata);
+    };
+
+    strata.health = {};
+    // Get the SFDC health status. 
+    // If this end point returns "SFDC:false" means SFDC is down/backend calls will not work
+    strata.health.sfdc = function (onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+        var url = strataHostname.clone().setPath('/rs/health/sfdc');        
+
+        fetchSfdcHealth = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                onSuccess(response);
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchSfdcHealth);
     };
 
     strata.utils = {};
