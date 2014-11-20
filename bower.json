@@ -1,7 +1,7 @@
 {
     "name": "stratajs",
     "description": "JavaScript Library to interact with the Red Hat Customer Portal API",
-    "version": "1.1.15",
+    "version": "1.1.16",
     "main": "strata.js",
     "repository": {
         "type": "git",
@@ -12,8 +12,7 @@
         ],
     "dependencies": {
         "jquery": ">=1.7.2",
-        "jsUri": "~1.2.1",
-        "js-markdown-extra": "iphands/js-markdown-extra"
+        "jsUri": "~1.2.1"
     },
     "authors": [
         {"name": "Dan Varga", "email": "dvarga@redhat.com"}

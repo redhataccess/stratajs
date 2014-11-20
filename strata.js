@@ -1,5 +1,5 @@
 /*jslint browser: true, devel: true, todo: true, unparam: true, camelcase: false */
-/*global define, btoa, Markdown */
+/*global define, btoa */
 /*
  Copyright 2014 Red Hat Inc.
 
@@ -77,7 +77,7 @@
         fetchAccountUsers,
         fetchUserChatSession;
 
-    strata.version = '1.1.15';
+    strata.version = '1.1.16';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -209,12 +209,6 @@
             }
         }
     }
-
-    function markDownToHtml(entry) {
-        var html = Markdown(entry);
-        return html;
-    }
-
 
     //Remove empty fields from object
     //TODO: Make this recursive, so it could remove nested objs
@@ -579,11 +573,7 @@
             url: url,
             success: function (response) {
                 convertDates(response);
-                if (response !== undefined && response.body !== undefined && response.body.html === undefined) {
-                    response.body = markDownToHtml(response.body);
-                    onSuccess(response);
-                }
-                else if (response !== undefined && response.body !== undefined && response.body.html !== undefined) {
+                if (response !== undefined && response.body !== undefined && response.body.html !== undefined) {
                     onSuccess(response);
                 } else {
                     onFailure('Failed to retrieve Article ' + article);
@@ -1740,13 +1730,13 @@
     };
 
     strata.health = {};
-    // Get the SFDC health status. 
+    // Get the SFDC health status.
     // If this end point returns "SFDC:false" means SFDC is down/backend calls will not work
     strata.health.sfdc = function (onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/health/sfdc');        
+        var url = strataHostname.clone().setPath('/rs/health/sfdc');
 
         fetchSfdcHealth = $.extend({}, baseAjaxParams, {
             url: url,
