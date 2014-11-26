@@ -29,9 +29,7 @@
 }(this, function ($, Uri) {
     'use strict';
 
-        // Psuedo LocalStorage (node envs)
-    var _safeStore = {},
-        _cookieJar = [],
+    var _cookieJar = [],
         addNotifiedUser,
         //Internal copy of user, might be useful for logging, only valid for cookie auth
         authedUser = {},
@@ -250,7 +248,7 @@
 
     //Function to test whether we've been passed a URL or just a string/ID
     function isUrl(path) {
-        return path.search(/^http/) >= 0;
+        return (typeof path === 'string') && path.search(/^http/) >= 0;
     }
 
     //Helper classes

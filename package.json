@@ -11,10 +11,17 @@
   "bugs": {
     "url": "https://github.com/redhataccess/stratajs/issues"
   },
+  "scripts": {
+    "test": "./node_modules/.bin/mocha ./test/node/runner.js"
+  },
   "homepage": "https://github.com/redhataccess/stratajs",
   "dependencies": {
     "jsuri": "~1.3.0-beta.1",
     "lodash": "~2.4.1",
     "request": "~2.48.0"
+  },
+  "devDependencies": {
+    "chai": "~1.10.0",
+    "mocha": "~2.0.1"
   }
 }
