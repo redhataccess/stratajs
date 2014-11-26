@@ -1,4 +1,4 @@
-/*jslint browser: true, devel: true, todo: true, unparam: true, camelcase: false */
+/*jslint browser: true, node: true, devel: true, todo: true, unparam: true, camelcase: false */
 /*global define, btoa */
 /*
  Copyright 2014 Red Hat Inc.
@@ -19,78 +19,87 @@
     'use strict';
     if (typeof define === 'function' && define.amd) {
         define('strata', ['jquery', 'jsUri'], factory);
+    } else if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+        var $ = require('./shim');
+        global.btoa = $.btoa;
+        module.exports = factory($, require('jsuri'));
     } else {
         root.strata = factory(root.$, root.Uri);
     }
 }(this, function ($, Uri) {
     'use strict';
 
-    var strata = {},
-    //Since we can't set the UserAgent
-        redhatClient = 'redhat_client',
-        redhatClientID,
+        // Psuedo LocalStorage (node envs)
+    var _safeStore = {},
+        _cookieJar = [],
+        addNotifiedUser,
         //Internal copy of user, might be useful for logging, only valid for cookie auth
         authedUser = {},
-        basicAuthToken = '',
-        portalHostname,
-        strataHostname,
         baseAjaxParams = {},
-        checkCredentials,
-        fetchUser,
-        fetchSolution,
-        fetchArticle,
-        searchArticles,
-        fetchCase,
-        fetchCaseComments,
-        createComment,
-        fetchCases,
-        fetchCasesCSV,
-        addNotifiedUser,
-        removeNotifiedUser,
-        updateCase,
-        filterCases,
-        createAttachment,
-        deleteAttachment,
-        updateOwner,
-        listCaseAttachments,
-        getSymptomsFromText,
-        listGroups,
-        createGroup,
-        deleteGroup,
-        updateGroup,
-        updateGroupUsers,
-        fetchGroup,
-        listProducts,
-        fetchProduct,
-        fetchProductVersions,
-        caseTypes,
+        basicAuthToken = '',
         caseSeverities,
         caseStatus,
-        fetchSystemProfiles,
-        fetchSystemProfile,
+        caseTypes,
+        checkCredentials,
+        createAttachment,
+        createComment,
+        createGroup,
         createSystemProfile,
-        fetchAccounts,
+        deleteAttachment,
+        deleteGroup,
         fetchAccount,
-        fetchURI,
-        fetchEntitlements,
-        fetchSfdcHealth,
+        fetchAccounts,
         fetchAccountUsers,
-        fetchUserChatSession;
+        fetchArticle,
+        fetchCase,
+        fetchCaseComments,
+        fetchCases,
+        fetchCasesCSV,
+        fetchEntitlements,
+        fetchGroup,
+        fetchProduct,
+        fetchProductVersions,
+        fetchSfdcHealth,
+        fetchSolution,
+        fetchSystemProfile,
+        fetchSystemProfiles,
+        fetchURI,
+        fetchUser,
+        fetchUserChatSession,
+        filterCases,
+        getSymptomsFromText,
+        listCaseAttachments,
+        listGroups,
+        listProducts,
+        portalHostname,
+        //Since we can't set the UserAgent
+        redhatClient = 'redhat_client',
+        redhatClientID,
+        removeNotifiedUser,
+        searchArticles,
+        strata = {},
+        strataHostname,
+        updateCase,
+        updateGroup,
+        updateGroupUsers,
+        updateOwner;
 
     strata.version = '1.1.16';
     redhatClientID = 'stratajs-' + strata.version;
 
-    if (window.portal && window.portal.host) {
+    if (typeof window !== 'undefined' && window.portal && window.portal.host) {
         //if this is a chromed app this will work otherwise we default to prod
         portalHostname = new Uri(window.portal.host).host();
-
     } else {
         portalHostname = 'access.redhat.com';
     }
 
-    if(localStorage && localStorage.getItem('portalHostname')) {
-        portalHostname = localStorage.getItem('portalHostname');
+    if (safeStore('portalHostname')) {
+        portalHostname = safeStore('portalHostname');
     }
+    //Store Base64 Encoded Auth Token
+    basicAuthToken = safeStore('rhAuthToken');
+    authedUser.login = safeStore('rhUserName');
 
     strataHostname = new Uri('https://api.' + portalHostname);
     strataHostname.addQueryParam(redhatClient, redhatClientID);
@@ -117,19 +126,32 @@
         strataHostname.addQueryParam(redhatClient, redhatClientID);
     };
 
+    strata.setCookieJar = function (cookies) {
+        _cookieJar = [];
+        for (var cookie in cookies) {
+            if (cookie === 'rh_sso' || cookie === 'rh_user' || cookie === 'JSESSIONID') {
+                _cookieJar.push(cookie + '=' + cookies[cookie]);
+            }
+        }
+    };
+
+    strata.getBasicAuthToken = function() {
+        return basicAuthToken;
+    };
+
+    strata.getCookieJar = function() {
+        return _cookieJar;
+    };
+
     strata.getAuthInfo = function () {
         return authedUser;
     };
 
-    //Store Base64 Encoded Auth Token
-    basicAuthToken = localStorage.getItem('rhAuthToken');
-    authedUser.login = localStorage.getItem('rhUserName');
-
     strata.setCredentials = function (username, password) {
         if(isASCII(username + password)){
             basicAuthToken = btoa(username + ':' + password);
-            localStorage.setItem('rhAuthToken', basicAuthToken);
-            localStorage.setItem('rhUserName', username);
+            safeStore('rhAuthToken', basicAuthToken);
+            safeStore('rhUserName', username);
             authedUser.login = username;
             return true;
         } else{
@@ -148,8 +170,8 @@
     };
 
     strata.clearBasicAuth = function () {
-        localStorage.setItem('rhAuthToken', '');
-        localStorage.setItem('rhUserName', '');
+        safeStore('rhAuthToken', '');
+        safeStore('rhUserName', '');
         basicAuthToken = '';
     };
 
@@ -173,6 +195,8 @@
         crossDomain: true,
         type: 'GET',
         method: 'GET',
+        getCookieJar: strata.getCookieJar,
+        getBasicAuthToken: strata.getBasicAuthToken,
         beforeSend: function (xhr) {
             //Include Basic Auth Credentials if available, will try SSO Cookie otherwise
             xhr.setRequestHeader('X-Omit', 'WWW-Authenticate');
@@ -1750,11 +1774,10 @@
         $.ajax(fetchSfdcHealth);
     };
 
-    strata.utils = {};
 
     //Get selected text from the browser, this should work on
     //Chrome and FF.  Have not tested anything else
-    strata.utils.getSelectedText = function () {
+    function getSelectedText () {
         var t = '';
         if (window.getSelection) {
             t = window.getSelection();
@@ -1764,9 +1787,9 @@
             t = document.selection.createRange().text;
         }
         return t.toString();
-    };
+    }
 
-    strata.utils.getURI = function (uri, resourceType, onSuccess, onFailure) {
+     function getURI (uri, resourceType, onSuccess, onFailure) {
         fetchURI = $.extend({}, baseAjaxParams, {
             url: uri,
             success: function (response) {
@@ -1778,9 +1801,9 @@
             }
         });
         $.ajax(fetchURI);
-    };
+    }
 
-    strata.utils.fixUsersObject = function (oldUsers) {
+    function fixUsersObject (oldUsers) {
         var users = {};
         users.user = [];
         for(var i = 0; i < oldUsers.length; i++){
@@ -1794,6 +1817,25 @@
             users.user.push(tempUser);
         }
         return users;
+    }
+
+    function safeStore (key, value) {
+        var noStorage = (typeof localStorage === 'undefined');
+        if (noStorage) {
+            return;
+        }
+        if (typeof value === 'undefined') {
+            return localStorage.getItem(key);
+        }
+        // set value
+        return localStorage.setItem(key, value);
+    }
+
+    strata.utils = {
+        getSelectedText: getSelectedText,
+        getURI: getURI,
+        fixUsersObject: fixUsersObject,
+        safeStore: safeStore
     };
 
     return strata;
