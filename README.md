@@ -1,7 +1,7 @@
 Red Hat Access: StrataJS
 ========================
 
-[![Build Status](https://travis-ci.org/redhataccess/stratajs.svg?branch=node)](https://travis-ci.org/redhataccess/stratajs)  
+[![Build Status](https://img.shields.io/travis/redhataccess/stratajs/node.svg?style=flat-square)](https://travis-ci.org/redhataccess/stratajs)  
 
 JavaScript Library to interact with the Red Hat Customer Portal API
 
