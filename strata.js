@@ -553,7 +553,7 @@
 
         var searchSolutions = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/solutions')
-                .addQueryParam('keyword', keyword)
+                .addQueryParam('keyword', encodeURIComponent(keyword))
                 .addQueryParam('limit', limit),
             success: function (response) {
                 if (chain && response.solution !== undefined) {
@@ -617,7 +617,7 @@
         if (chain === undefined) {chain = false; }
 
         var url = strataHostname.clone().setPath('/rs/articles');
-        url.addQueryParam('keyword', keyword);
+        url.addQueryParam('keyword', encodeURIComponent(keyword));
         url.addQueryParam('limit', limit);
 
         searchArticles = $.extend({}, baseAjaxParams, {
@@ -1730,7 +1730,7 @@
 
         var searchStrata = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/search')
-                .addQueryParam('keyword', keyword)
+                .addQueryParam('keyword', encodeURIComponent(keyword))
                 .addQueryParam('contentType', 'article,solution')
                 .addQueryParam('limit', limit),
             success: function (response) {
