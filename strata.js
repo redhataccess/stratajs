@@ -595,7 +595,7 @@
             url: url,
             success: function (response) {
                 convertDates(response);
-                if (response !== undefined) {
+                if (response !== undefined && response.title !== undefined) {
                     return onSuccess(response);
                 }
                 onFailure('Failed to retrieve Article ' + article);

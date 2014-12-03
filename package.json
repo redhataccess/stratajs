@@ -16,7 +16,7 @@
   },
   "homepage": "https://github.com/redhataccess/stratajs",
   "dependencies": {
-    "jsUri": "~1.2.1",
+    "jsuri": "~1.2.1",
     "lodash": "~2.4.1",
     "request": "~2.48.0"
   },
