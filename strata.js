@@ -595,11 +595,10 @@
             url: url,
             success: function (response) {
                 convertDates(response);
-                if (response !== undefined && response.body !== undefined && response.body.html !== undefined) {
-                    onSuccess(response);
-                } else {
-                    onFailure('Failed to retrieve Article ' + article);
+                if (response !== undefined) {
+                    return onSuccess(response);
                 }
+                onFailure('Failed to retrieve Article ' + article);
             },
             error: function (xhr, reponse, status) {
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
