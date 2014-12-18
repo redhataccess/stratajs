@@ -75,7 +75,8 @@
         fetchEntitlements,
         fetchSfdcHealth,
         fetchAccountUsers,
-        fetchUserChatSession;
+        fetchUserChatSession,
+        fetchChatTranscript;
 
     strata.version = '1.1.16';
     redhatClientID = 'stratajs-' + strata.version;
@@ -1794,6 +1795,30 @@
             users.user.push(tempUser);
         }
         return users;
+    };
+
+    strata.chat = {};
+
+    //List chat transcripts for the given user
+    strata.chat.list = function (onSuccess, onFailure, ssoUserName) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+        var url;
+        if (ssoUserName === undefined) {
+            url = strataHostname.clone().setPath('/rs/chats');
+        } else {
+            url = strataHostname.clone().setPath('/rs/chats').addQueryParam('ssoName', ssoUserName.toString());;
+        }        
+
+        fetchChatTranscript = $.extend({}, baseAjaxParams, {
+            url: url,
+            success:  onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchChatTranscript);
     };
 
     return strata;
