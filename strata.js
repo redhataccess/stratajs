@@ -793,6 +793,34 @@
         $.ajax(fetchCases);
     };
 
+    //Search cases SFDC/Calaveras
+    strata.cases.search = function (onSuccess, onFailure, searchQuery, isSolrSearch) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (searchQuery === undefined) { onFailure('search query must be defined'); }
+
+        var url = strataHostname.clone().setPath('/rs/cases');
+        url.addQueryParam('query', searchQuery);
+        if (isSolrSearch) {
+            url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
+        }
+        searchCases = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                if (response['case'] !== undefined) {
+                    response['case'].forEach(convertDates);
+                    onSuccess(response['case']);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(searchCases);
+    };
+
     //Create a new case comment
     strata.cases.notified_users.add = function (casenum, ssoUserName, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
