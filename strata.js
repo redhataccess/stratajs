@@ -44,6 +44,7 @@
         fetchCaseComments,
         createComment,
         fetchCases,
+        searchCases,
         fetchCasesCSV,
         addNotifiedUser,
         removeNotifiedUser,
