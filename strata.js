@@ -77,7 +77,8 @@
         fetchSfdcHealth,
         fetchAccountUsers,
         fetchUserChatSession,
-        fetchChatTranscript;
+        fetchChatTranscript,
+        createEscalation;
 
     strata.version = '1.1.16';
     redhatClientID = 'stratajs-' + strata.version;
@@ -1848,6 +1849,45 @@
             }
         });
         $.ajax(fetchChatTranscript);
+    };
+
+    strata.escalation = {};
+
+    //Create escalation request
+    strata.escalation.create = function (escalationData, onSuccess, onFailure) {
+        //Default parameter value
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (escalationData === undefined) { onFailure('escalation data must be defined'); }
+
+        var url = strataHostname.clone().setPath('/rs/escalations');
+
+        createEscalation = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: JSON.stringify(escalationData),
+            type: 'POST',
+            method: 'POST',
+            contentType: 'application/vnd.redhat.escalation+json',
+            headers: {
+                accept: 'application/vnd.redhat.escalation+json'
+            },
+            success: function (response, status, xhr) {
+                //Created escalated data is in the XHR
+                var escalationNum;
+                if (response.location !== undefined && response.location[0] !== undefined){
+                    escalationNum = response.location[0];
+                    escalationNum = escalationNum.split('/').pop();
+                } else{
+                    escalationNum = xhr.getResponseHeader('Location');
+                    escalationNum = escalationNum.split('/').pop();
+                }
+                onSuccess(escalationNum);
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(createEscalation);
     };
 
     return strata;
