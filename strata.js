@@ -232,6 +232,20 @@
         return path.search(/^http/) >= 0;
     }
 
+    var XML_CHAR_MAP = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&apos;'
+    };
+    //Function to escape XML specific charcters
+    function escapeXml (s) {
+        return s.replace(/[<>&"']/g, function (ch) {
+            return XML_CHAR_MAP[ch];
+        });
+    };
+
     //Helper classes
     //Class to describe the required Case fields
     strata.Case = function () {
@@ -417,9 +431,9 @@
         }if(data.version !== undefined){
             xmlString = xmlString.concat("<version>" + data.version + "</version>");
         }if(data.summary !== undefined){
-            xmlString = xmlString.concat("<summary>" + data.summary + "</summary>");
+            xmlString = xmlString.concat("<summary>" + escapeXml(data.summary) + "</summary>");
         }if(data.description !== undefined){
-            xmlString = xmlString.concat("<description>" + data.description + "</description>");
+            xmlString = xmlString.concat("<description>" + escapeXml(data.description) + "</description>");
         }
         xmlString = xmlString.concat("</case>");
 
