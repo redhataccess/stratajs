@@ -80,7 +80,7 @@
         fetchChatTranscript,
         createEscalation;
 
-    strata.version = '1.1.16';
+    strata.version = '1.1.17';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
