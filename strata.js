@@ -18,7 +18,7 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define('strata', ['jquery', 'jsUri'], factory);
+        define('strata', ['jquery', 'jsuri'], factory);
     } else {
         root.strata = factory(root.$, root.Uri);
     }
@@ -80,7 +80,7 @@
         fetchChatTranscript,
         createEscalation;
 
-    strata.version = '1.1.17';
+    strata.version = '1.1.18';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
