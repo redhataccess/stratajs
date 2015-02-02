@@ -1254,7 +1254,7 @@
             type: 'PUT',
             method: 'PUT',
             contentType: 'application/json',
-            data: group,
+            data: JSON.stringify(group),
             success: onSuccess,
             statusCode: {
                 200: function(response) {
