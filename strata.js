@@ -80,7 +80,7 @@
         fetchChatTranscript,
         createEscalation;
 
-    strata.version = '1.1.20';
+    strata.version = '1.1.21';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -825,7 +825,7 @@
             success: function (response) {
                 if (response['case'] !== undefined) {
                     response['case'].forEach(convertDates);
-                    onSuccess(response['case']);
+                    onSuccess(response);
                 } else {
                     onSuccess([]);
                 }
