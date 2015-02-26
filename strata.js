@@ -889,7 +889,7 @@
             success: function (response) {
                 if (response['case'] !== undefined) {
                     response['case'].forEach(convertDates);
-                    onSuccess(response['case']);
+                    onSuccess(response);
                 } else {
                     onSuccess([]);
                 }
@@ -899,7 +899,7 @@
             }
         });
         $.ajax(searchCases);
-    };    
+    };
 
     //Create a new case comment
     strata.cases.notified_users.add = function (casenum, ssoUserName, onSuccess, onFailure) {
