@@ -809,23 +809,87 @@
         $.ajax(fetchCases);
     };
 
-    //Search cases SFDC/Calaveras
-    strata.cases.search = function (onSuccess, onFailure, searchQuery, isSolrSearch) {
+    //Utility wrapper for preparing SOLR query
+    function prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams) {
+        var solrQueryString = "";
+        var identifier = '';
+        var isObjectNothing = function (object) {
+            if (object === '' || object === undefined || object === null) {
+                return true;
+            } else {
+                return false;
+            }
+        };
+        var concatQueryString = function(param){
+            if(solrQueryString === ""){
+                solrQueryString = param;
+            }else{
+                solrQueryString = solrQueryString.concat(" AND " + param);
+            }
+        };        
+        if (!isObjectNothing(caseStatus)) {
+            identifier = '+case_status:';
+            if (caseStatus.toLowerCase() === 'open') {
+                concatQueryString(identifier + 'Waiting*');
+            } else if (caseStatus.toLowerCase() === 'closed') {
+                concatQueryString(identifier + 'Closed*');
+            } else{
+                concatQueryString(identifier + '*');
+            }
+        }
+        if (!isObjectNothing(caseOwner)) { 
+            identifier = '+case_owner:';
+            concatQueryString(identifier + caseOwner);
+        }
+        if (!isObjectNothing(caseGroup)) {
+            identifier = '+case_folderNumber:';
+            if (caseGroup === 'ungrouped') {
+                concatQueryString('+case_hasGroup:false');
+            } else {
+                concatQueryString(identifier + caseGroup);
+            }
+        }
+        if (!isObjectNothing(searchString)) {
+            identifier = 'allText:';
+            concatQueryString(identifier + searchString);
+        }
+        if (!isObjectNothing(queryParams) && queryParams.length > 0){
+            for (var i = 0; i < queryParams.length; ++i) {
+                concatQueryString(queryParams[i]);
+            }
+        }
+        if (!isObjectNothing(sortField)) {
+            identifier = '&sort=case_';
+            solrQueryString = solrQueryString.concat(identifier + sortField);
+        }
+        if (!isObjectNothing(sortOrder)) {
+            solrQueryString = solrQueryString.concat(" " + sortOrder);
+        }
+        if (!isObjectNothing(offset)) {
+            solrQueryString = solrQueryString.concat("&offset=" + offset);
+        }
+        if (!isObjectNothing(limit)) {
+            solrQueryString = solrQueryString.concat("&limit=" + limit);
+        }
+        return solrQueryString;
+    }
+
+    //Search cases SOLR
+    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        if (searchQuery === undefined) { onFailure('search query must be defined'); }
-
+        var searchQuery = prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams);
+        
         var url = strataHostname.clone().setPath('/rs/cases');
         url.addQueryParam('query', searchQuery);
-        if (isSolrSearch) {
-            url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
-        }
+        url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
+        
         searchCases = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
                 if (response['case'] !== undefined) {
                     response['case'].forEach(convertDates);
-                    onSuccess(response);
+                    onSuccess(response['case']);
                 } else {
                     onSuccess([]);
                 }
@@ -835,7 +899,7 @@
             }
         });
         $.ajax(searchCases);
-    };
+    };    
 
     //Create a new case comment
     strata.cases.notified_users.add = function (casenum, ssoUserName, onSuccess, onFailure) {
