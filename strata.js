@@ -246,6 +246,15 @@
         });
     };
 
+    //Function to check valid(not null) object present
+    function isObjectNothing(object) {
+        if (object === '' || object === undefined || object === null) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
     //Helper classes
     //Class to describe the required Case fields
     strata.Case = function () {
@@ -810,16 +819,9 @@
     };
 
     //Utility wrapper for preparing SOLR query
-    function prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams) {
+    function prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
         var solrQueryString = "";
-        var identifier = '';
-        var isObjectNothing = function (object) {
-            if (object === '' || object === undefined || object === null) {
-                return true;
-            } else {
-                return false;
-            }
-        };
+        var identifier = '';        
         var concatQueryString = function(param){
             if(solrQueryString === ""){
                 solrQueryString = param;
@@ -871,14 +873,28 @@
         if (!isObjectNothing(limit)) {
             solrQueryString = solrQueryString.concat("&limit=" + limit);
         }
+        if (!isObjectNothing(addlQueryParams)) {
+            solrQueryString = solrQueryString.concat(addlQueryParams);
+        }
         return solrQueryString;
     }
 
     //Search cases SOLR
-    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams) {
+    //Following are the filter params that can be passed to SOLR search:
+    //1.caseStatus - open (waiting on Red Hat/Waiting on customer), closed, both
+    //2.caseOwner - full name of the case owner (First name + Last name)
+    //3.caseGroup - group number of the group to which the case belongs
+    //4.searchString - the search string present in the case description, summary, comments etc
+    //5.sortField - to sort the result list based on this field (case property)
+    //6.sortOrder - order ASC/DESC
+    //7.offset - from which index to start (0 for begining)
+    //8.limit - how many results to fetch (50 by default)
+    //9.queryParams - should be a list of params (identifier:value) to be added to the search query
+    //10.addlQueryParams - additional query params to be appended at the end of the query, begin with '&'
+    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        var searchQuery = prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams);
+        var searchQuery = prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams);
         
         var url = strataHostname.clone().setPath('/rs/cases');
         url.addQueryParam('query', searchQuery);
