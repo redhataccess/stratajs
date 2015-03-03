@@ -246,6 +246,15 @@
         });
     };
 
+    //Function to check valid(not null) object present
+    function isObjectNothing(object) {
+        if (object === '' || object === undefined || object === null) {
+            return true;
+        } else {
+            return false;
+        }
+    };
+
     //Helper classes
     //Class to describe the required Case fields
     strata.Case = function () {
@@ -809,17 +818,88 @@
         $.ajax(fetchCases);
     };
 
-    //Search cases SFDC/Calaveras
-    strata.cases.search = function (onSuccess, onFailure, searchQuery, isSolrSearch) {
+    //Utility wrapper for preparing SOLR query
+    function prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
+        var solrQueryString = "";
+        var identifier = '';        
+        var concatQueryString = function(param){
+            if(solrQueryString === ""){
+                solrQueryString = param;
+            }else{
+                solrQueryString = solrQueryString.concat(" AND " + param);
+            }
+        };        
+        if (!isObjectNothing(caseStatus)) {
+            identifier = '+case_status:';
+            if (caseStatus.toLowerCase() === 'open') {
+                concatQueryString(identifier + 'Waiting*');
+            } else if (caseStatus.toLowerCase() === 'closed') {
+                concatQueryString(identifier + 'Closed*');
+            } else{
+                concatQueryString(identifier + '*');
+            }
+        }
+        if (!isObjectNothing(caseOwner)) { 
+            identifier = '+case_owner:';
+            concatQueryString(identifier + caseOwner);
+        }
+        if (!isObjectNothing(caseGroup)) {
+            identifier = '+case_folderNumber:';
+            if (caseGroup === 'ungrouped') {
+                concatQueryString('+case_hasGroup:false');
+            } else {
+                concatQueryString(identifier + caseGroup);
+            }
+        }
+        if (!isObjectNothing(searchString)) {
+            identifier = 'allText:';
+            concatQueryString(identifier + searchString);
+        }
+        if (!isObjectNothing(queryParams) && queryParams.length > 0){
+            for (var i = 0; i < queryParams.length; ++i) {
+                concatQueryString(queryParams[i]);
+            }
+        }
+        if (!isObjectNothing(sortField)) {
+            identifier = '&sort=case_';
+            solrQueryString = solrQueryString.concat(identifier + sortField);
+        }
+        if (!isObjectNothing(sortOrder)) {
+            solrQueryString = solrQueryString.concat(" " + sortOrder);
+        }
+        if (!isObjectNothing(offset)) {
+            solrQueryString = solrQueryString.concat("&offset=" + offset);
+        }
+        if (!isObjectNothing(limit)) {
+            solrQueryString = solrQueryString.concat("&limit=" + limit);
+        }
+        if (!isObjectNothing(addlQueryParams)) {
+            solrQueryString = solrQueryString.concat(addlQueryParams);
+        }
+        return solrQueryString;
+    }
+
+    //Search cases SOLR
+    //Following are the filter params that can be passed to SOLR search:
+    //1.caseStatus - open (waiting on Red Hat/Waiting on customer), closed, both
+    //2.caseOwner - full name of the case owner (First name + Last name)
+    //3.caseGroup - group number of the group to which the case belongs
+    //4.searchString - the search string present in the case description, summary, comments etc
+    //5.sortField - to sort the result list based on this field (case property)
+    //6.sortOrder - order ASC/DESC
+    //7.offset - from which index to start (0 for begining)
+    //8.limit - how many results to fetch (50 by default)
+    //9.queryParams - should be a list of params (identifier:value) to be added to the search query
+    //10.addlQueryParams - additional query params to be appended at the end of the query, begin with '&'
+    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        if (searchQuery === undefined) { onFailure('search query must be defined'); }
-
+        var searchQuery = prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams);
+        
         var url = strataHostname.clone().setPath('/rs/cases');
         url.addQueryParam('query', searchQuery);
-        if (isSolrSearch) {
-            url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
-        }
+        url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
+        
         searchCases = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
