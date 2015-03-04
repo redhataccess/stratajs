@@ -1092,6 +1092,7 @@
             data: JSON.stringify(casedata),
             type: 'PUT',
             method: 'PUT',
+            dataType: 'text',
             contentType: 'application/json',
             statusCode: {
                 200: successCallback,
