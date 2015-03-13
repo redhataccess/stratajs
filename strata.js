@@ -203,7 +203,7 @@
         var key;
         for (key in entry) {
             if (entry.hasOwnProperty(key)) {
-                if (/[\s\S]*_date/.test(key)) {
+                if ((/[\s\S]*_date/.test(key)) || (/[\s\S]*_time/.test(key))) {
                     //Skip indexed_date, it's not a real "Date"
                     if (key !== 'indexed_date') {
                         entry[key] = new Date(entry[key]);
@@ -671,6 +671,9 @@
             success: function (response) {
                 if (response) {
                     convertDates(response);
+                    if (response.chats !== undefined && response.chats.chat !== undefined) {
+                        response.chats.chat.forEach(convertDates);
+                    }
                     onSuccess(response);
                 } else {
                     onFailure('Failed to retrieve Case: ' + casenum);
