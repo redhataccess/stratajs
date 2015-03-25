@@ -879,6 +879,7 @@
         if (!isObjectNothing(addlQueryParams)) {
             solrQueryString = solrQueryString.concat(addlQueryParams);
         }
+        solrQueryString = encodeURI(solrQueryString);
         return solrQueryString;
     }
 
