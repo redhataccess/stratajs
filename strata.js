@@ -78,7 +78,8 @@
         fetchAccountUsers,
         fetchUserChatSession,
         fetchChatTranscript,
-        createEscalation;
+        createEscalation,
+        attachmentMaxSize;
 
     strata.version = '1.2.3';
     redhatClientID = 'stratajs-' + strata.version;
@@ -1558,6 +1559,7 @@
     //Base for values
     strata.values = {};
     strata.values.cases = {};
+    strata.values.cases.attachment = {};
 
     //Retrieve the case types
     strata.values.cases.types = function (onSuccess, onFailure) {
@@ -1626,6 +1628,29 @@
             }
         });
         $.ajax(caseStatus);
+    };
+
+    //Retrieve the attachment max. size
+    strata.values.cases.attachment.size = function (onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+        var url = strataHostname.clone().setPath('/rs/values/case/attachment/size');
+
+        attachmentMaxSize = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                if (response !== undefined) {                  
+                    onSuccess(response);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(attachmentMaxSize);
     };
 
     //Base for System Profiles
