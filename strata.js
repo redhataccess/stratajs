@@ -41,6 +41,7 @@
         checkCredentials,
         createAttachment,
         createComment,
+        createEscalation,
         createGroup,
         createSystemProfile,
         deleteAttachment,
@@ -52,7 +53,9 @@
         fetchCase,
         fetchCaseComments,
         fetchCases,
+        searchCases,
         fetchCasesCSV,
+        fetchChatTranscript,
         fetchEntitlements,
         fetchGroup,
         fetchProduct,
@@ -82,7 +85,7 @@
         updateGroupUsers,
         updateOwner;
 
-    strata.version = '1.1.16';
+    strata.version = '1.2.5';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (typeof window !== 'undefined' && window.portal && window.portal.host) {
@@ -222,7 +225,7 @@
         var key;
         for (key in entry) {
             if (entry.hasOwnProperty(key)) {
-                if (/[\s\S]*_date/.test(key)) {
+                if ((/[\s\S]*_date/.test(key)) || (/[\s\S]*_time/.test(key))) {
                     //Skip indexed_date, it's not a real "Date"
                     if (key !== 'indexed_date') {
                         entry[key] = new Date(entry[key]);
@@ -250,6 +253,29 @@
     function isUrl(path) {
         return (typeof path === 'string') && path.search(/^http/) >= 0;
     }
+
+    var XML_CHAR_MAP = {
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&apos;'
+    };
+    //Function to escape XML specific charcters
+    function escapeXml (s) {
+        return s.replace(/[<>&"']/g, function (ch) {
+            return XML_CHAR_MAP[ch];
+        });
+    };
+
+    //Function to check valid(not null) object present
+    function isObjectNothing(object) {
+        if (object === '' || object === undefined || object === null) {
+            return true;
+        } else {
+            return false;
+        }
+    };
 
     //Helper classes
     //Class to describe the required Case fields
@@ -436,9 +462,9 @@
         }if(data.version !== undefined){
             xmlString = xmlString.concat("<version>" + data.version + "</version>");
         }if(data.summary !== undefined){
-            xmlString = xmlString.concat("<summary>" + data.summary + "</summary>");
+            xmlString = xmlString.concat("<summary>" + escapeXml(data.summary) + "</summary>");
         }if(data.description !== undefined){
-            xmlString = xmlString.concat("<description>" + data.description + "</description>");
+            xmlString = xmlString.concat("<description>" + escapeXml(data.description) + "</description>");
         }
         xmlString = xmlString.concat("</case>");
 
@@ -666,6 +692,9 @@
             success: function (response) {
                 if (response) {
                     convertDates(response);
+                    if (response.chats !== undefined && response.chats.chat !== undefined) {
+                        response.chats.chat.forEach(convertDates);
+                    }
                     onSuccess(response);
                 } else {
                     onFailure('Failed to retrieve Case: ' + casenum);
@@ -811,6 +840,106 @@
             }
         });
         $.ajax(fetchCases);
+    };
+
+    //Utility wrapper for preparing SOLR query
+    function prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
+        var solrQueryString = "";
+        var identifier = '';        
+        var concatQueryString = function(param){
+            if(solrQueryString === ""){
+                solrQueryString = param;
+            }else{
+                solrQueryString = solrQueryString.concat(" AND " + param);
+            }
+        };        
+        if (!isObjectNothing(caseStatus)) {
+            identifier = '+case_status:';
+            if (caseStatus.toLowerCase() === 'open') {
+                concatQueryString(identifier + 'Waiting*');
+            } else if (caseStatus.toLowerCase() === 'closed') {
+                concatQueryString(identifier + 'Closed*');
+            } else{
+                concatQueryString(identifier + '*');
+            }
+        }
+        if (!isObjectNothing(caseOwner)) { 
+            identifier = '+case_owner:';
+            concatQueryString(identifier + caseOwner);
+        }
+        if (!isObjectNothing(caseGroup)) {
+            identifier = '+case_folderNumber:';
+            if (caseGroup === 'ungrouped') {
+                concatQueryString('+case_hasGroup:false');
+            } else {
+                concatQueryString(identifier + caseGroup);
+            }
+        }
+        if (!isObjectNothing(searchString)) {
+            identifier = 'allText:';
+            concatQueryString(identifier + searchString);
+        }
+        if (!isObjectNothing(queryParams) && queryParams.length > 0){
+            for (var i = 0; i < queryParams.length; ++i) {
+                concatQueryString(queryParams[i]);
+            }
+        }
+        if (!isObjectNothing(sortField)) {
+            identifier = '&sort=case_';
+            solrQueryString = solrQueryString.concat(identifier + sortField);
+        }
+        if (!isObjectNothing(sortOrder)) {
+            solrQueryString = solrQueryString.concat(" " + sortOrder);
+        }
+        if (!isObjectNothing(offset)) {
+            solrQueryString = solrQueryString.concat("&offset=" + offset);
+        }
+        if (!isObjectNothing(limit)) {
+            solrQueryString = solrQueryString.concat("&limit=" + limit);
+        }
+        if (!isObjectNothing(addlQueryParams)) {
+            solrQueryString = solrQueryString.concat(addlQueryParams);
+        }
+        solrQueryString = encodeURI(solrQueryString);
+        return solrQueryString;
+    }
+
+    //Search cases SOLR
+    //Following are the filter params that can be passed to SOLR search:
+    //1.caseStatus - open (waiting on Red Hat/Waiting on customer), closed, both
+    //2.caseOwner - full name of the case owner (First name + Last name)
+    //3.caseGroup - group number of the group to which the case belongs
+    //4.searchString - the search string present in the case description, summary, comments etc
+    //5.sortField - to sort the result list based on this field (case property)
+    //6.sortOrder - order ASC/DESC
+    //7.offset - from which index to start (0 for begining)
+    //8.limit - how many results to fetch (50 by default)
+    //9.queryParams - should be a list of params (identifier:value) to be added to the search query
+    //10.addlQueryParams - additional query params to be appended at the end of the query, begin with '&'
+    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        var searchQuery = prepareSolrQuery(caseStatus, caseOwner, caseGroup, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams);
+        
+        var url = strataHostname.clone().setPath('/rs/cases');
+        url.addQueryParam('query', searchQuery);
+        url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
+        
+        searchCases = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                if (response['case'] !== undefined) {
+                    response['case'].forEach(convertDates);
+                    onSuccess(response);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(searchCases);
     };
 
     //Create a new case comment
@@ -988,6 +1117,7 @@
             data: JSON.stringify(casedata),
             type: 'PUT',
             method: 'PUT',
+            dataType: 'text',
             contentType: 'application/json',
             statusCode: {
                 200: successCallback,
@@ -1230,7 +1360,7 @@
             type: 'PUT',
             method: 'PUT',
             contentType: 'application/json',
-            data: group,
+            data: JSON.stringify(group),
             success: onSuccess,
             statusCode: {
                 200: function(response) {
@@ -1449,6 +1579,7 @@
     //Base for values
     strata.values = {};
     strata.values.cases = {};
+    strata.values.cases.attachment = {};
 
     //Retrieve the case types
     strata.values.cases.types = function (onSuccess, onFailure) {
@@ -1517,6 +1648,29 @@
             }
         });
         $.ajax(caseStatus);
+    };
+
+    //Retrieve the attachment max. size
+    strata.values.cases.attachment.size = function (onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+        var url = strataHostname.clone().setPath('/rs/values/case/attachment/size');
+
+        attachmentMaxSize = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                if (response !== undefined) {                  
+                    onSuccess(response);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(attachmentMaxSize);
     };
 
     //Base for System Profiles
@@ -1833,6 +1987,69 @@
         getURI: getURI,
         fixUsersObject: fixUsersObject,
         safeStore: safeStore
+    };
+
+    strata.chat = {};
+
+    //List chat transcripts for the given user
+    strata.chat.list = function (onSuccess, onFailure, ssoUserName) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+        var url;
+        if (ssoUserName === undefined) {
+            url = strataHostname.clone().setPath('/rs/chats');
+        } else {
+            url = strataHostname.clone().setPath('/rs/chats').addQueryParam('ssoName', ssoUserName.toString());
+        }        
+
+        fetchChatTranscript = $.extend({}, baseAjaxParams, {
+            url: url,
+            success:  onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchChatTranscript);
+    };
+
+    strata.escalation = {};
+
+    //Create escalation request
+    strata.escalation.create = function (escalationData, onSuccess, onFailure) {
+        //Default parameter value
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (escalationData === undefined) { onFailure('escalation data must be defined'); }
+
+        var url = strataHostname.clone().setPath('/rs/escalations');
+
+        createEscalation = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: JSON.stringify(escalationData),
+            type: 'POST',
+            method: 'POST',
+            contentType: 'application/vnd.redhat.escalation+json',
+            headers: {
+                accept: 'application/vnd.redhat.escalation+json'
+            },
+            success: function (response, status, xhr) {
+                //Created escalated data is in the XHR
+                var escalationNum;
+                if (response.location !== undefined && response.location[0] !== undefined){
+                    escalationNum = response.location[0];
+                    escalationNum = escalationNum.split('/').pop();
+                } else{
+                    escalationNum = xhr.getResponseHeader('Location');
+                    escalationNum = escalationNum.split('/').pop();
+                }
+                onSuccess(escalationNum);
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(createEscalation);
     };
 
     return strata;

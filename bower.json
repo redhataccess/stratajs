@@ -1,20 +1,23 @@
 {
-    "name": "stratajs",
-    "description": "JavaScript Library to interact with the Red Hat Customer Portal API",
-    "version": "1.1.16",
-    "main": "strata.js",
-    "repository": {
-        "type": "git",
-        "url": "git://github.com/redhataccess/stratajs"
-    },
-    "ignore": [
-        "test"
-        ],
-    "dependencies": {
-        "jquery": ">=1.7.2",
-        "jsUri": "~1.2.1"
-    },
-    "authors": [
-        {"name": "Dan Varga", "email": "dvarga@redhat.com"}
-    ]
+  "name": "stratajs",
+  "description": "JavaScript Library to interact with the Red Hat Customer Portal API",
+  "version": "1.2.5",
+  "main": "strata.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/redhataccess/stratajs"
+  },
+  "ignore": [
+    "test"
+  ],
+  "dependencies": {
+    "jquery": ">=1.7.2",
+    "jsUri": "~1.2.1"
+  },
+  "authors": [
+    {
+      "name": "Dan Varga",
+      "email": "dvarga@redhat.com"
+    }
+  ]
 }
