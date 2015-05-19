@@ -18,7 +18,7 @@
 (function (root, factory) {
     'use strict';
     if (typeof define === 'function' && define.amd) {
-        define('strata', ['jquery', 'jsUri'], factory);
+        define(['jquery', 'jsUri'], factory);
     } else {
         root.strata = factory(root.$, root.Uri);
     }
