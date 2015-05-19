@@ -81,7 +81,7 @@
         createEscalation,
         attachmentMaxSize;
 
-    strata.version = '1.2.5';
+    strata.version = '1.3.1';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -983,7 +983,7 @@
         $.ajax(removeNotifiedUser);
     };
 
-    //List cases in CSV for the given user, this casues a download to occur
+    //List cases in CSV for the given user
     strata.cases.csv = function (onSuccess, onFailure) {
         var url = strataHostname.clone().setPath('/rs/cases');
 
@@ -995,9 +995,7 @@
             contentType: 'text/csv',
             dataType: 'text',
             success: function(data) {
-                var uri = 'data:text/csv;charset=UTF-8,' + encodeURIComponent(data);
-                window.location = uri;
-                onSuccess();
+                onSuccess(data);
             },
             error: function (xhr, response, status) {
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
