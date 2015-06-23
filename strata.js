@@ -81,7 +81,7 @@
         createEscalation,
         attachmentMaxSize;
 
-    strata.version = '1.3.1';
+    strata.version = '1.4.1';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
