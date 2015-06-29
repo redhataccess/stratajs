@@ -81,7 +81,7 @@
         createEscalation,
         attachmentMaxSize;
 
-    strata.version = '1.4.1';
+    strata.version = '1.4.2';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -859,7 +859,7 @@
         if (!isObjectNothing(caseGroup)) {
             identifier = 'case_folderNumber:';
             if (caseGroup === 'ungrouped') {
-                concatQueryString('case_hasGroup:false');
+                concatQueryString(identifier + "\\-1");
             } else {
                 concatQueryString(identifier + caseGroup);
             }
