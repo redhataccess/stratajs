@@ -67,6 +67,7 @@
         caseTypes,
         caseSeverities,
         caseStatus,
+        businesshours,
         fetchSystemProfiles,
         fetchSystemProfile,
         createSystemProfile,
@@ -1659,6 +1660,33 @@
             }
         });
         $.ajax(attachmentMaxSize);
+    };
+
+    //Retrieve business hours
+    strata.values.businesshours = function (timezone, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+        var url = strataHostname.clone().setPath('/rs/values/businesshours');
+        url.addQueryParam('timezone', timezone);
+
+        businesshours = $.extend({}, baseAjaxParams, {
+            url: url,
+            headers: {
+                accept: 'application/vnd.redhat.businesshours+json'
+            },
+            success: function (response) {
+                if (response !== undefined) {
+                    onSuccess(response);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(businesshours);
     };
 
     //Base for System Profiles
