@@ -80,6 +80,7 @@
         fetchUserChatSession,
         fetchChatTranscript,
         createEscalation,
+        caseReviewSelector,
         attachmentMaxSize;
 
     strata.version = '1.4.2';
@@ -2048,6 +2049,33 @@
             }
         });
         $.ajax(createEscalation);
+    };
+
+    strata.reviews = {};
+
+    strata.reviews.getCaseNumber = function ( query, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+
+        var url = strataHostname.clone().setPath('/rs/cases?'+query);
+        console.log(url)
+        caseReviewSelector = $.extend({}, baseAjaxParams, {
+            url: url,
+            headers: {
+                accept: 'application/vnd.redhat.solr+json'
+            },
+            success: function (response) {
+                if (response !== undefined) {
+                    onSuccess(response);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(caseReviewSelector);
     };
 
     return strata;
