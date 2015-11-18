@@ -2058,7 +2058,6 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath('/rs/cases?'+query);
-        console.log(url)
         caseReviewSelector = $.extend({}, baseAjaxParams, {
             url: url,
             headers: {
