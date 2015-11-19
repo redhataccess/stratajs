@@ -2099,7 +2099,7 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(reviewSelector);
+        $.ajax(solutionReviewSelector);
     };
 
     return strata;
