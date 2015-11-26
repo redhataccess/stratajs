@@ -42,6 +42,7 @@
         searchArticles,
         fetchCase,
         fetchCaseComments,
+        fetchCaseExternalUpdates,
         createComment,
         fetchCases,
         searchCases,
@@ -655,6 +656,7 @@
     strata.cases.comments = {};
     strata.cases.notified_users = {};
     strata.cases.owner = {};
+    strata.cases.externalUpdates = {};
 
     //Retrieve a case
     strata.cases.get = function (casenum, onSuccess, onFailure) {
@@ -749,6 +751,37 @@
             }
         });
         $.ajax(fetchCaseComments);
+    };
+
+    //List External Updates
+    strata.cases.externalUpdates.list = function (casenum, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (casenum === undefined) { onFailure('casenum must be defined'); }
+
+        var url;
+        if (isUrl(casenum)) {
+            url = new Uri(casenum + '/externalTrackerUpdates');
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/externalTrackerUpdates');
+        }
+
+        fetchCaseExternalUpdates = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                if (response.external_tracker_update !== undefined) {
+                    response.external_tracker_update.forEach(convertDates);
+                    onSuccess(response.external_tracker_update);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchCaseExternalUpdates);
     };
 
     //TODO: Support DRAFT comments? Only useful for internal
@@ -962,7 +995,7 @@
             dataType: 'text',
             success: onSuccess,
             statusCode: {
-                201: onSuccess,
+                201: onSuccess
             },
             error: function (xhr, reponse, status) {
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
