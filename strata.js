@@ -1010,7 +1010,7 @@
         if (casenum === undefined) { onFailure('casenum must be defined'); }
         if (ssoUserName === undefined) { onFailure('ssoUserName must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/notified_users/' + ssoUserName);
+        var url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/notified_users/' + encodeURIComponent(ssoUserName));
 
         removeNotifiedUser = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1310,7 +1310,7 @@
         if (ssoUserName === undefined) {
             url = strataHostname.clone().setPath('/rs/groups');
         } else {
-            url = strataHostname.clone().setPath('/rs/groups/contact/' + ssoUserName);
+            url = strataHostname.clone().setPath('/rs/groups/contact/' + encodeURIComponent(ssoUserName));
         }
 
         listGroups = $.extend({}, baseAjaxParams, {
@@ -1525,7 +1525,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/products/contact/' + ssoUserName);
+        var url = strataHostname.clone().setPath('/rs/products/contact/' + encodeURIComponent(ssoUserName));
         if (ssoUserName === undefined) {
             url = strataHostname.clone().setPath('/rs/products');
         }
@@ -1896,7 +1896,7 @@
         if (ssoUserName === undefined) {
             url = strataHostname.clone().setPath('/rs/entitlements?showAll=' + showAll.toString());
         } else {
-            url = strataHostname.clone().setPath('/rs/entitlements/contact/' + ssoUserName + '?showAll=' + showAll.toString());
+            url = strataHostname.clone().setPath('/rs/entitlements/contact/' + encodeURIComponent(ssoUserName) + '?showAll=' + showAll.toString());
         }
 
         fetchEntitlements = $.extend({}, baseAjaxParams, {
