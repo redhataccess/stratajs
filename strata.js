@@ -85,7 +85,7 @@
         solutionReviewSelector,
         attachmentMaxSize;
 
-    strata.version = '1.4.2';
+    strata.version = '1.4.8';
     redhatClientID = 'stratajs-' + strata.version;
 
     if (window.portal && window.portal.host) {
@@ -1864,7 +1864,7 @@
         if (isUrl(accountnum)) {
             url = new Uri(accountnum);
             url.addQueryParam(redhatClient, redhatClientID);
-        } else if (group === undefined) {
+        } else if (group === undefined || group === "-1") {
             url = strataHostname.clone().setPath('/rs/accounts/' + accountnum + '/users');
         } else {
             url = strataHostname.clone()
