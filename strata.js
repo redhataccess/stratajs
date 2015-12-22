@@ -46,6 +46,7 @@
         createComment,
         fetchCases,
         searchCases,
+        advancedSearchCases,
         fetchCasesCSV,
         addNotifiedUser,
         removeNotifiedUser,
@@ -967,6 +968,31 @@
         });
         $.ajax(searchCases);
     };
+
+    strata.cases.advancedSearch = function (onSuccess, onFailure, query) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; } 
+
+        var url = strataHostname.clone().setPath("/rs/cases");
+        url.addQueryParam('query', query);
+        url.addQueryParam('newSearch', true);
+
+        advancedSearchCases = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                if(response['case'] != undefined) {
+                    response['case'].forEach(convertDates);
+                    onSuccess(response);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, response, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+            }
+        });
+        $.ajax(advancedSearchCases);
+    }
 
     //Create a new case comment
     strata.cases.notified_users.add = function (casenum, ssoUserName, onSuccess, onFailure) {
