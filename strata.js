@@ -1414,10 +1414,14 @@
             success: onSuccess,
             statusCode: {
                 200: function(response) {
-                    var locationHeader = response.getResponseHeader('Location');
-                    var groupNumber =
-                        locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
-                    onSuccess(groupNumber);
+                    if(response!==null){
+                        var locationHeader = response.getResponseHeader('Location');
+                        var groupNumber =
+                            locationHeader.slice(locationHeader.lastIndexOf('/') + 1);
+                        onSuccess(groupNumber);
+                    } else{
+                        onSuccess();
+                    }
                 },
                 400: throwError,
                 500: throwError
