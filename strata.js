@@ -84,7 +84,9 @@
         createEscalation,
         caseReviewSelector,
         solutionReviewSelector,
-        attachmentMaxSize;
+        attachmentMaxSize,
+        fetchCaseSymptoms,
+        symptomSolutions;
 
     strata.version = '1.4.8';
     redhatClientID = 'stratajs-' + strata.version;
@@ -2165,5 +2167,63 @@
         $.ajax(solutionReviewSelector);
     };
 
+    //Retrieve case symptoms
+    strata.cases.symptoms={}
+    strata.cases.symptoms.get = function (casenum, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (casenum === undefined) { onFailure('casenum must be defined'); }
+
+        var url;
+        if (isUrl(casenum)) {
+            url = new Uri(casenum + '/comments');
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/symptoms');
+        }
+
+        fetchCaseSymptoms = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: function (response) {
+                if (response.symptom !== undefined) {
+                    onSuccess(response.symptom);
+                } else {
+                    onSuccess([]);
+                }
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchCaseSymptoms);
+    };
+
+    //Retrieve symptoms related solutions
+    strata.cases.symptoms.solutions={}
+    strata.cases.symptoms.solutions.post = function (limit, isOnlySymptoms, data, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (limit === undefined) { onFailure('limit must be defined'); }
+
+        var url=strataHostname.clone().setPath('/rs/problems').addQueryParam('onlySymptoms', isOnlySymptoms).addQueryParam('limit', limit);
+        
+        symptomSolutions = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: data,
+            type: 'POST',
+            method: 'POST',
+            contentType: 'text/plain',
+            headers: {
+                accept: 'application/vnd.redhat.json.suggestions'
+            },
+            success: function (response, status, xhr) {
+                onSuccess(response.recommendation);
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(symptomSolutions);
+    };
     return strata;
 }));
