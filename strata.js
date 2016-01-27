@@ -86,7 +86,8 @@
         solutionReviewSelector,
         attachmentMaxSize,
         fetchCaseSymptoms,
-        symptomSolutions;
+        symptomSolutions,
+        createSolution;
 
     strata.version = '1.4.8';
     redhatClientID = 'stratajs-' + strata.version;
@@ -584,6 +585,28 @@
             }
         });
         $.ajax(searchSolutions);
+    };
+
+    //Create a solution
+    strata.solutions.post = function (solution, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if(solution === undefined) { throw 'solution must be defined'; }
+
+        createSolution = $.extend({}, baseAjaxParams, {
+            url: strataHostname.clone().setPath('/rs/solutions'),
+            data: JSON.stringify(solution),
+            type: 'POST',
+            method: 'POST',
+            contentType: 'application/json',
+            success: function (response) {
+                onSuccess(response);
+            },
+            error: function (xhr, response, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+            }
+        });
+        $.ajax(createSolution);
     };
 
     //Base for articles
