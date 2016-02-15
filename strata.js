@@ -479,6 +479,36 @@
         $.ajax(getRecommendationsFromText);
     };
 
+    strata.recommendationsForCase = function (data, onSuccess, onFailure, limit, start) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (data === undefined) { data = ''; }
+        if (limit === undefined) { limit = 50; }
+        if (start === undefined) { start = 0; }
+
+        var url = strataHostname.clone().setPath('/rs/recommendations').addQueryParam('limit', limit)
+          .addQueryParam('start', start).addQueryParam('fl', 'documentKind,id').addQueryParam('fq', 'documentKind: (Solution)');
+
+        var getRecommendationsFromCase = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: JSON.stringify(data),
+            type: 'POST',
+            method: 'POST',
+            contentType: 'application/vnd.redhat.case+json',
+            headers: {
+                accept: 'application/vnd.redhat.solr+json'
+            },
+            success: function (response) {
+                onSuccess(response);
+            },
+            error: function (xhr, response, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+            }
+        });
+
+        $.ajax(getRecommendationsFromCase);
+    };
+
     //Base for users
     strata.users = {};
     strata.users.chatSession = {};
@@ -887,7 +917,7 @@
     //Utility wrapper for preparing SOLR query
     function prepareSolrQuery(caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
         var solrQueryString = "";
-        var identifier = '';        
+        var identifier = '';
         var concatQueryString = function(param){
             if(solrQueryString === ""){
                 solrQueryString = param;
@@ -914,7 +944,7 @@
                 concatQueryString(identifier + '*');
             }
         }
-        if (!isObjectNothing(caseOwner)) { 
+        if (!isObjectNothing(caseOwner)) {
             identifier = 'case_owner:';
             concatQueryString(identifier + caseOwner);
         }
@@ -972,11 +1002,11 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         var searchQuery = prepareSolrQuery(caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams);
-        
+
         var url = strataHostname.clone().setPath('/rs/cases');
         url.addQueryParam('query', searchQuery);
         url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
-        
+
         searchCases = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
@@ -996,7 +1026,7 @@
 
     strata.cases.advancedSearch = function (onSuccess, onFailure, query) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
-        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; } 
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath("/rs/cases");
         url.addQueryParam('query', query);
@@ -1739,7 +1769,7 @@
         attachmentMaxSize = $.extend({}, baseAjaxParams, {
             url: url,
             success: function (response) {
-                if (response !== undefined) {                  
+                if (response !== undefined) {
                     onSuccess(response);
                 } else {
                     onSuccess([]);
@@ -2089,7 +2119,7 @@
             url = strataHostname.clone().setPath('/rs/chats');
         } else {
             url = strataHostname.clone().setPath('/rs/chats').addQueryParam('ssoName', ssoUserName.toString());;
-        }        
+        }
 
         fetchChatTranscript = $.extend({}, baseAjaxParams, {
             url: url,
@@ -2229,7 +2259,7 @@
         if (limit === undefined) { onFailure('limit must be defined'); }
 
         var url=strataHostname.clone().setPath('/rs/problems').addQueryParam('onlySymptoms', isOnlySymptoms).addQueryParam('limit', limit);
-        
+
         symptomSolutions = $.extend({}, baseAjaxParams, {
             url: url,
             data: data,
