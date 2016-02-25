@@ -479,7 +479,7 @@
         $.ajax(getRecommendationsFromText);
     };
 
-    strata.recommendationsForCase = function (data, onSuccess, onFailure, limit, start) {
+    strata.recommendationsForCase = function (data, onSuccess, onFailure, limit, start, highlight, highlightTagPre, highlightTagPost) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (data === undefined) { data = ''; }
@@ -488,6 +488,14 @@
 
         var url = strataHostname.clone().setPath('/rs/recommendations').addQueryParam('limit', limit)
           .addQueryParam('start', start).addQueryParam('fl', 'documentKind,id').addQueryParam('fq', 'documentKind: (Solution)');
+
+        if(highlight) {
+            url.addQueryParam('hl', 'true').addQueryParam('hl.fragsize', '300')
+              .addQueryParam('hl.fl', 'abstract,publishedAbstract');
+            if(highlightTagPre !== undefined) url.addQueryParam('hl.simple.pre', highlightTagPre)
+            if(highlightTagPost !== undefined) url.addQueryParam('hl.simple.post', highlightTagPost)
+        }
+
 
         var getRecommendationsFromCase = $.extend({}, baseAjaxParams, {
             url: url,
