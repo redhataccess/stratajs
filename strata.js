@@ -2035,11 +2035,11 @@
                 .addQueryParam('enableElevation', 'true') // Enable hand picked solutions
                 .addQueryParam('rows', rows),
             success: function (response) {
-                if (chain && response && response.response.docs !== undefined) {
+                if (chain && response && response.response && response.response.docs !== undefined) {
                     response.response.docs.forEach(function (entry) {
                         strata.utils.getURI(entry.uri, entry.resource_type, onSuccess, onFailure);
                     });
-                } else if (response && response.response.docs !== undefined) {
+                } else if (response && response.response && response.response.docs !== undefined) {
                     onSuccess(response.search_result);
                 } else {
                     onSuccess([]);
