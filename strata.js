@@ -2027,7 +2027,6 @@
         
         var searchStrata = $.extend({}, baseAjaxParams, {
             headers: {
-                'X-Omit': 'WWW-Authenticate',
                 accept: 'application/vnd.redhat.solr+json'
             },
             url: strataHostname.clone().setPath('/rs/search')
