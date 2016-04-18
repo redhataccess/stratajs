@@ -604,7 +604,7 @@
 
         var searchSolutions = $.extend({}, baseAjaxParams, {
             url: strataHostname.clone().setPath('/rs/solutions')
-                .addQueryParam('keyword', encodeURIComponent(keyword))
+                .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
             success: function (response) {
                 if (chain && response.solution !== undefined) {
@@ -690,7 +690,7 @@
         if (chain === undefined) {chain = false; }
 
         var url = strataHostname.clone().setPath('/rs/articles');
-        url.addQueryParam('keyword', encodeURIComponent(keyword));
+        url.addQueryParam('keyword', keyword);
         url.addQueryParam('limit', limit);
 
         searchArticles = $.extend({}, baseAjaxParams, {
@@ -2018,24 +2018,29 @@
         }, onFailure, limit);
     };
 
-    strata.search = function (keyword, onSuccess, onFailure, limit, chain) {
+    strata.search = function (q, onSuccess, onFailure, rows, chain) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        if (keyword === undefined) { keyword = ''; }
-        if (limit === undefined) {limit = 50; }
+        if (q === undefined) { q = ''; }
+        if (rows === undefined) {rows = 50; }
         if (chain === undefined) {chain = false; }
-
+        
         var searchStrata = $.extend({}, baseAjaxParams, {
+            headers: {
+                'X-Omit': 'WWW-Authenticate',
+                accept: 'application/vnd.redhat.solr+json'
+            },
             url: strataHostname.clone().setPath('/rs/search')
-                .addQueryParam('keyword', encodeURIComponent(keyword))
-                .addQueryParam('contentType', 'article,solution')
-                .addQueryParam('limit', limit),
+                .addQueryParam('q', q)
+                .addQueryParam('fq', 'documentKind:(Solution OR Article)')
+                .addQueryParam('enableElevation', 'true') // Enable hand picked solutions
+                .addQueryParam('rows', rows),
             success: function (response) {
-                if (chain && response.search_result !== undefined) {
-                    response.search_result.forEach(function (entry) {
+                if (chain && response && response.response.docs !== undefined) {
+                    response.response.docs.forEach(function (entry) {
                         strata.utils.getURI(entry.uri, entry.resource_type, onSuccess, onFailure);
                     });
-                } else if (response.search_result !== undefined) {
+                } else if (response && response.response.docs !== undefined) {
                     onSuccess(response.search_result);
                 } else {
                     onSuccess([]);
