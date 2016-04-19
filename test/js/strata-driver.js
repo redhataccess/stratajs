@@ -284,6 +284,15 @@ Caused by: java.net.ConnectException: Connection refused \n\
         11,
         true
     );
+    
+    //Returns an array of Articles and Solutions
+    strata.search("mod_cluster 503",
+        function (docs) {
+            console.log(docs.length + " solutions/articles found for search 'mod_cluster 503'");
+        },
+        onFailure,
+        10
+    );
 
     var filter = new strata.CaseFilter();
     filter.id = "#########";
