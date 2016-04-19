@@ -486,16 +486,19 @@
         if (limit === undefined) { limit = 50; }
         if (start === undefined) { start = 0; }
 
-        var url = strataHostname.clone().setPath('/rs/recommendations').addQueryParam('limit', limit)
-          .addQueryParam('start', start).addQueryParam('fl', 'documentKind,id').addQueryParam('fq', 'documentKind: (Solution)');
+        var url = strataHostname.clone().setPath('/rs/recommendations')
+            .addQueryParam('rows', limit)
+            .addQueryParam('start', start)
+            .addQueryParam('fl', 'documentKind,id')
+            .addQueryParam('fq', 'documentKind: (Solution)');
 
-        if(highlight) {
-            url.addQueryParam('hl', 'true').addQueryParam('hl.fragsize', '300')
-              .addQueryParam('hl.fl', 'abstract,publishedAbstract');
-            if(highlightTagPre !== undefined) url.addQueryParam('hl.simple.pre', highlightTagPre)
+        if (highlight) {
+            url.addQueryParam('hl', 'true')
+                .addQueryParam('hl.fragsize', '300')
+                .addQueryParam('hl.fl', 'abstract,publishedAbstract');
+            if(highlightTagPre !== undefined) url.addQueryParam('hl.simple.pre', highlightTagPre);
             if(highlightTagPost !== undefined) url.addQueryParam('hl.simple.post', highlightTagPost)
         }
-
 
         var getRecommendationsFromCase = $.extend({}, baseAjaxParams, {
             url: url,
@@ -2031,6 +2034,7 @@
             },
             url: strataHostname.clone().setPath('/rs/search')
                 .addQueryParam('q', q)
+                .addQueryParam('fl', '[score]') // this will add the score to each response
                 .addQueryParam('fq', 'documentKind:(Solution OR Article)')
                 .addQueryParam('enableElevation', 'true') // Enable hand picked solutions
                 .addQueryParam('rows', rows),
