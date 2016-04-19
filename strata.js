@@ -2037,10 +2037,10 @@
             success: function (response) {
                 if (chain && response && response.response && response.response.docs !== undefined) {
                     response.response.docs.forEach(function (entry) {
-                        strata.utils.getURI(entry.uri, entry.resource_type, onSuccess, onFailure);
+                        strata.utils.getURI(entry.uri, entry.documentKind, onSuccess, onFailure);
                     });
                 } else if (response && response.response && response.response.docs !== undefined) {
-                    onSuccess(response.search_result);
+                    onSuccess(response.response.docs);
                 } else {
                     onSuccess([]);
                 }
