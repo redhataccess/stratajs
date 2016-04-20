@@ -62,6 +62,22 @@ require(['strata'], function (strata) {
         },
         onFailure
     );
+    
+    // Recommendations for a case
+    strata.recommendationsForCase(
+        {
+            "product": "JBoss Web Framework Kit",
+            "version": "2.1.0",
+            "summary": "Experiencing a NullPointerException",
+            "description": "Nullpointer in my Exception"
+        },
+        function (response) {
+            //Iterate over the response array
+            //response.forEach(someHandler);
+            console.log(response);
+        },
+        onFailure
+    );
 
 
     //Fetch a solution by ID

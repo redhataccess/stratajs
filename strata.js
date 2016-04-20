@@ -429,82 +429,35 @@
         $.ajax(getRecommendationsFromText);
     };
 
-    //TODO rip out when strata fixes endpoint
-    strata.recommendationsXmlHack = function (data, onSuccess, onFailure, limit, highlight, highlightTags) {
-        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
-        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        if (data === undefined) { data = ''; }
-        if (limit === undefined) { limit = 50; }
-        if (highlight === undefined) { highlight = false; }
-
-        var tmpUrl = strataHostname.clone().setPath('/rs/problems')
-                .addQueryParam('limit', limit).addQueryParam('highlight', highlight);
-        if(highlightTags !== undefined){
-            tmpUrl.addQueryParam('highlightTags', highlightTags);
-        }
-
-        var xmlString = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><case xmlns=\"http://www.redhat.com/gss/strata\">";
-        if(data.product !== undefined){
-            xmlString = xmlString.concat("<product>" + data.product + "</product>");
-        }if(data.version !== undefined){
-            xmlString = xmlString.concat("<version>" + data.version + "</version>");
-        }if(data.summary !== undefined){
-            xmlString = xmlString.concat("<summary>" + escapeXml(data.summary) + "</summary>");
-        }if(data.description !== undefined){
-            xmlString = xmlString.concat("<description>" + escapeXml(data.description) + "</description>");
-        }
-        xmlString = xmlString.concat("</case>");
-
-        var getRecommendationsFromText = $.extend({}, baseAjaxParams, {
-            url: tmpUrl,
-            data: xmlString,
-            type: 'POST',
-            method: 'POST',
-            contentType: 'application/xml',
-            headers: {
-                Accept: 'application/vnd.redhat.json.suggestions'
-            },
-            success: function (response) {
-                if(response.recommendation !== undefined){
-                    var suggestedRecommendations = response.recommendation;
-                    onSuccess(suggestedRecommendations);
-                } else {
-                    onSuccess([]);
-                }
-            },
-            error: function (xhr, reponse, status) {
-                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
-            }
-        });
-        $.ajax(getRecommendationsFromText);
-    };
-
     strata.recommendationsForCase = function (data, onSuccess, onFailure, limit, start, highlight, highlightTagPre, highlightTagPost) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        if (data === undefined) { data = ''; }
-        if (limit === undefined) { limit = 50; }
-        if (start === undefined) { start = 0; }
+        if (data == null) data = '';
+        if (limit == null) limit = 50;
+        if (start == null) start = 0;
 
-        var url = strataHostname.clone().setPath('/rs/recommendations').addQueryParam('limit', limit)
-          .addQueryParam('start', start).addQueryParam('fl', 'documentKind,id').addQueryParam('fq', 'documentKind: (Solution)');
+        var url = strataHostname.clone().setPath('/rs/recommendations')
+            .addQueryParam('rows', String(limit))
+            .addQueryParam('start', String(start)) // jsUri fubar's 0, it doesn't add it as a number, must force it to a string to be safe
+            .addQueryParam('fl', '*,score')
+            .addQueryParam('fq', 'documentKind:(Solution)');
 
-        if(highlight) {
-            url.addQueryParam('hl', 'true').addQueryParam('hl.fragsize', '300')
-              .addQueryParam('hl.fl', 'abstract,publishedAbstract');
-            if(highlightTagPre !== undefined) url.addQueryParam('hl.simple.pre', highlightTagPre)
-            if(highlightTagPost !== undefined) url.addQueryParam('hl.simple.post', highlightTagPost)
+        if (highlight) {
+            url.addQueryParam('hl', 'true')
+                .addQueryParam('hl.fragsize', '300')
+                .addQueryParam('hl.fl', 'abstract,publishedAbstract');
+            if (highlightTagPre !== undefined) url.addQueryParam('hl.simple.pre', highlightTagPre);
+            if (highlightTagPost !== undefined) url.addQueryParam('hl.simple.post', highlightTagPost)
         }
 
-
         var getRecommendationsFromCase = $.extend({}, baseAjaxParams, {
-            url: url,
+            url: url.toString(),
             data: JSON.stringify(data),
             type: 'POST',
             method: 'POST',
-            contentType: 'application/vnd.redhat.case+json',
             headers: {
-                accept: 'application/vnd.redhat.solr+json'
+                'Content-Type'  : 'application/vnd.redhat.case+json',
+                'Accept'        : 'application/vnd.redhat.solr+json'
             },
             success: function (response) {
                 onSuccess(response);
@@ -2031,6 +1984,7 @@
             },
             url: strataHostname.clone().setPath('/rs/search')
                 .addQueryParam('q', q)
+                .addQueryParam('fl', '*, score') // this will add the score to each response
                 .addQueryParam('fq', 'documentKind:(Solution OR Article)')
                 .addQueryParam('enableElevation', 'true') // Enable hand picked solutions
                 .addQueryParam('rows', rows),
@@ -2208,7 +2162,7 @@
         $.ajax(caseReviewSelector);
     };
 
-    strata.reviews.getSolutionNumber = function ( query, onSuccess, onFailure) {
+    strata.reviews.getSolutionNumber = function (query, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
@@ -2233,7 +2187,7 @@
     };
 
     //Retrieve case symptoms
-    strata.cases.symptoms={}
+    strata.cases.symptoms = {};
     strata.cases.symptoms.get = function (casenum, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
@@ -2264,7 +2218,7 @@
     };
 
     //Retrieve symptoms related solutions
-    strata.cases.symptoms.solutions={}
+    strata.cases.symptoms.solutions = {};
     strata.cases.symptoms.solutions.post = function (limit, isOnlySymptoms, data, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
