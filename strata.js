@@ -985,13 +985,20 @@
         $.ajax(searchCases);
     };
 
-    strata.cases.advancedSearch = function (onSuccess, onFailure, query) {
+    strata.cases.advancedSearch = function (onSuccess, onFailure, query, order, offset, limit) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if(limit === undefined) {limit = 50;}
+        if(offset === undefined) {offset = 0;}
 
         var url = strataHostname.clone().setPath("/rs/cases");
         url.addQueryParam('query', query);
         url.addQueryParam('newSearch', true);
+        url.addQueryParam('limit', limit);
+        url.addQueryParam('offset', offset);
+        if(order != null) {
+            url.addQueryParam('sort', order);
+        }
 
         advancedSearchCases = $.extend({}, baseAjaxParams, {
             url: url,
