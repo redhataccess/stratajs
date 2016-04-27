@@ -1940,6 +1940,51 @@
         $.ajax(fetchAccountUsers);
     };
 
+    strata.accounts.addBookmark = function (accountNumber, ssoName, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if(accountNumber == null) { throw 'Account number must be specified'; }
+        if(ssoName == null) { throw 'Contact SSO must be specified'; }
+
+        var url = strataHostname.clone().setPath('/rs/accounts/bookmarks');
+        var addBookmark = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: JSON.stringify({
+                accountNumber: accountNumber,
+                contactSsoName: ssoName
+            }),
+            type: 'POST',
+            method: 'POST',
+            contentType: 'application/json',
+            success: onSuccess,
+            error: function (xhr, response, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+            }
+        });
+        $.ajax(addBookmark);
+    };
+
+    strata.accounts.removeBookmark = function (accountNumber, ssoName, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if(accountNumber == null) { throw 'Account number must be specified'; }
+        if(ssoName == null) { throw 'Contact SSO must be specified'; }
+
+        var url = strataHostname.clone().setPath('/rs/accounts/' + accountNumber + '/bookmarks');
+        url.addQueryParam('contactSsoName', ssoName);
+
+        var removeBookmark = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'DELETE',
+            method: 'DELETE',
+            success: onSuccess,
+            error: function (xhr, response, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+            }
+        });
+        $.ajax(removeBookmark);
+    };
+
     strata.entitlements = {};
     strata.entitlements.get = function (showAll, onSuccess, onFailure, ssoUserName) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
