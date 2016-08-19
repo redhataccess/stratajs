@@ -37,6 +37,7 @@
         baseAjaxParams = {},
         checkCredentials,
         fetchUser,
+        fetchUserBySSO,
         fetchSolution,
         fetchArticle,
         searchArticles,
@@ -494,6 +495,26 @@
         });
         $.ajax(fetchUser);
     };
+
+    strata.users.getBySSO = function(onSuccess, onFailure, userSSO) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if(userSSO == null || userSSO.length === 0) { throw 'user SSO must be specified'; }
+
+        fetchUserBySSO = $.extend({}, baseAjaxParams,  {
+            url: strataHostname.clone().setPath('/rs/users').addQueryParam('ssoUserName', userSSO),
+            headers: {
+                accept: 'application/json'
+            },
+            success: function(response) {
+                onSuccess(response);
+            },
+            error: function(xhr, response, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+            }
+        });
+        $.ajax(fetchUserBySSO);
+    }
 
     strata.users.chatSession.get = function (onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
