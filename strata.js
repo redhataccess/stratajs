@@ -1977,6 +1977,7 @@
             type: 'POST',
             method: 'POST',
             contentType: 'application/json',
+            dataType: "text",
             success: onSuccess,
             error: function (xhr, response, status) {
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
@@ -1998,6 +1999,7 @@
             url: url,
             type: 'DELETE',
             method: 'DELETE',
+            dataType: "text",
             success: onSuccess,
             error: function (xhr, response, status) {
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
