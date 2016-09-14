@@ -897,14 +897,13 @@
     };
 
     //Utility wrapper for preparing SOLR query
-    function prepareSolrQuery(caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
+    function prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams) {
         var solrQueryString = "";
-        var identifier = '';
         var concatQueryString = function(param){
             if(solrQueryString === ""){
                 solrQueryString = param;
             }else{
-                solrQueryString = solrQueryString.concat("+AND+" + param);
+                solrQueryString = solrQueryString.concat(" AND " + param);
             }
         };
         //Function to escape special chars in search query string
@@ -917,54 +916,52 @@
             concatQueryString(escapeSearchString(searchString));
         }
         if (!isObjectNothing(caseStatus)) {
-            identifier = 'case_status:';
+            var caseStatusQuery = 'case_status:';
             if (caseStatus.toLowerCase() === 'open') {
-                concatQueryString(identifier + 'Waiting*');
+                concatQueryString(caseStatusQuery + 'Waiting*');
             } else if (caseStatus.toLowerCase() === 'closed') {
-                concatQueryString(identifier + 'Closed*');
+                concatQueryString(caseStatusQuery + 'Closed*');
             } else{
-                concatQueryString(identifier + '*');
+                concatQueryString(caseStatusQuery + '*');
             }
         }
         if (!isObjectNothing(caseOwner)) {
-            identifier = 'case_owner:';
-            concatQueryString(identifier + caseOwner);
+            var caseOwnerQuery = 'case_owner:';
+            concatQueryString(caseOwnerQuery + caseOwner);
         }
         if (!isObjectNothing(caseGroup)) {
-            identifier = 'case_folderNumber:';
+            var caseGroupQuery = 'case_folderNumber:';
             if (caseGroup === 'ungrouped') {
-                concatQueryString(identifier + "\\-1");
+                concatQueryString(caseGroupQuery + "\\-1");
             } else {
-                concatQueryString(identifier + caseGroup);
+                concatQueryString(caseGroupQuery + caseGroup);
             }
         }
         if (!isObjectNothing(accountNumber)) {
-            identifier = 'case_accountNumber:';
-            concatQueryString(identifier + accountNumber);
+            var accountNumberQuery = 'case_accountNumber:';
+            concatQueryString(accountNumberQuery + accountNumber);
         }
         if (!isObjectNothing(queryParams) && queryParams.length > 0){
             for (var i = 0; i < queryParams.length; ++i) {
                 concatQueryString(queryParams[i]);
             }
         }
+        url.addQueryParam('query', solrQueryString);
         if (!isObjectNothing(sortField)) {
-            identifier = '&sort=case_';
-            solrQueryString = solrQueryString.concat(identifier + sortField);
+            var solrSortOrder = 'case_' + sortField;
+            if (!isObjectNothing(sortOrder)) {
+                solrSortOrder = solrSortOrder.concat(" " + sortOrder);
+            }
+            url.addQueryParam('sort', solrSortOrder);
         }
-        if (!isObjectNothing(sortOrder)) {
-            solrQueryString = solrQueryString.concat(" " + sortOrder);
-        }
+
         if (!isObjectNothing(offset)) {
-            solrQueryString = solrQueryString.concat("&offset=" + offset);
+            url.addQueryParam('offset', offset);
         }
         if (!isObjectNothing(limit)) {
-            solrQueryString = solrQueryString.concat("&limit=" + limit);
+            url.addQueryParam('limit', limit);
         }
-        if (!isObjectNothing(addlQueryParams)) {
-            solrQueryString = solrQueryString.concat(addlQueryParams);
-        }
-        solrQueryString = encodeURI(solrQueryString);
-        return solrQueryString;
+        return url;
     }
 
     //Search cases SOLR
@@ -980,13 +977,12 @@
     //9.limit - how many results to fetch (50 by default)
     //10.queryParams - should be a list of params (identifier:value) to be added to the search query
     //11.addlQueryParams - additional query params to be appended at the end of the query, begin with '&'
-    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams) {
+    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
-        var searchQuery = prepareSolrQuery(caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, addlQueryParams);
 
         var url = strataHostname.clone().setPath('/rs/cases');
-        url.addQueryParam('query', searchQuery);
+        prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams);
         url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
 
         searchCases = $.extend({}, baseAjaxParams, {
