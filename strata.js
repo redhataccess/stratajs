@@ -441,7 +441,7 @@
             .addQueryParam('rows', String(limit))
             .addQueryParam('start', String(start)) // jsUri fubar's 0, it doesn't add it as a number, must force it to a string to be safe
             .addQueryParam('fl', '*,score')
-            .addQueryParam('fq', 'documentKind:Solution');
+            .addQueryParam('fq', 'documentKind:Solution')
             .addQueryParam('fq', '-internalTags:helper_solution');
 
         if (highlight) {
