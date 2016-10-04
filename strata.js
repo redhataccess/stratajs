@@ -927,7 +927,7 @@
         }
         if (!isObjectNothing(caseOwner)) {
             var caseOwnerQuery = 'case_owner:';
-            concatQueryString(caseOwnerQuery + caseOwner);
+            concatQueryString(caseOwnerQuery + '"' + caseOwner + '"');
         }
         if (!isObjectNothing(caseGroup)) {
             var caseGroupQuery = 'case_folderNumber:';
@@ -2048,7 +2048,7 @@
         if (q === undefined) { q = ''; }
         if (rows === undefined) {rows = 50; }
         if (chain === undefined) {chain = false; }
-        
+
         var searchStrata = $.extend({}, baseAjaxParams, {
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
