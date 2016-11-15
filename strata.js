@@ -1270,7 +1270,7 @@
 
     //POST an attachment
     //data MUST be MULTIPART/FORM-DATA
-    strata.cases.attachments.post = function (data, casenum, onSuccess, onFailure) {
+    strata.cases.attachments.post = function (data, casenum, onSuccess, onFailure, onProgress) {
         //Default parameter value
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
@@ -1286,6 +1286,16 @@
         }
 
         createAttachment = $.extend({}, baseAjaxParams, {
+            xhr: function() {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function(evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = evt.loaded * 100 / evt.total;
+                        onProgress(percentComplete);
+                    }
+                }, false);
+               return xhr;
+            },
             url: url,
             data: data,
             type: 'POST',
