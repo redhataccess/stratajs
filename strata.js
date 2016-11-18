@@ -1288,12 +1288,14 @@
         createAttachment = $.extend({}, baseAjaxParams, {
             xhr: function() {
                 var xhr = new window.XMLHttpRequest();
-                xhr.upload.addEventListener("progress", function(evt) {
-                    if (evt.lengthComputable) {
-                        var percentComplete = evt.loaded * 100 / evt.total;
-                        onProgress(percentComplete);
-                    }
-                }, false);
+                if(onProgress != null && $.isFunction(onProgress)) {
+                    xhr.upload.addEventListener("progress", function(evt) {
+                        if (evt.lengthComputable) {
+                            var percentComplete = evt.loaded * 100 / evt.total;
+                            onProgress(percentComplete);
+                        }
+                    }, false);
+                }                
                return xhr;
             },
             url: url,
