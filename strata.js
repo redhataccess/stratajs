@@ -238,8 +238,9 @@
     }
 
     //Function to test whether we've been passed a URL or just a string/ID
-    function isUrl(path) {
-        return path.search(/^http/) >= 0;
+    //regex from https://github.com/segmentio/is-url/blob/master/index.js
+    function isUrl(string) {
+        return /^(?:\w+:)?\/\/([^\s\.]+\.\S{2}|localhost[\:?\d]*)\S*$/.test(string);
     }
 
     var XML_CHAR_MAP = {
@@ -1295,7 +1296,7 @@
                             onProgress(percentComplete);
                         }
                     }, false);
-                }                
+                }
                return xhr;
             },
             url: url,
