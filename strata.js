@@ -1271,7 +1271,7 @@
 
     //POST an attachment
     //data MUST be MULTIPART/FORM-DATA
-    strata.cases.attachments.post = function (data, casenum, onSuccess, onFailure, onProgress) {
+    strata.cases.attachments.post = function (data, casenum, onSuccess, onFailure, onProgress, isPrivate) {
         //Default parameter value
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
@@ -1285,6 +1285,7 @@
         } else {
             url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/attachments');
         }
+        url.addQueryParam("private", !!isPrivate);
 
         createAttachment = $.extend({}, baseAjaxParams, {
             xhr: function() {
