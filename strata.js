@@ -1285,7 +1285,9 @@
         } else {
             url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/attachments');
         }
-        url.addQueryParam("private", !!isPrivate);
+        if (isPrivate){
+            url.addQueryParam("private", isPrivate);
+        }
 
         createAttachment = $.extend({}, baseAjaxParams, {
             xhr: function() {
