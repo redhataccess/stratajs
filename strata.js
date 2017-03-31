@@ -2032,6 +2032,54 @@
         $.ajax(removeBookmark);
     };
 
+    //Get Accounts under a partner
+    strata.accounts.getManagedAccounts = function (accountnum, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (accountnum === undefined) { onFailure('accountnum must be defined'); }
+
+        var url;
+        if (isUrl(accountnum)) {
+            url = new Uri(accountnum);
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/accounts/customer/' + accountnum);
+        }
+
+        fetchAccount = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchAccount);
+    };
+
+    //Get Accounts that manage a customer
+    strata.accounts.getManagersForAccount = function (accountnum, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (accountnum === undefined) { onFailure('accountnum must be defined'); }
+
+        var url;
+        if (isUrl(accountnum)) {
+            url = new Uri(accountnum);
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath('/rs/accounts/partner/' + accountnum);
+        }
+
+        fetchAccount = $.extend({}, baseAjaxParams, {
+            url: url,
+            success: onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(fetchAccount);
+    };
+
     strata.entitlements = {};
     strata.entitlements.get = function (showAll, onSuccess, onFailure, ssoUserName) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
