@@ -34,6 +34,8 @@
         basicAuthToken = '',
         portalHostname,
         strataHostname,
+        secureSupportPortal = false,
+        secureSupportPathPrefix = '',
         baseAjaxParams = {},
         checkCredentials,
         fetchUser,
@@ -111,6 +113,11 @@
     strata.setRedhatClientID = function (id) {
         redhatClientID = id;
         strataHostname.replaceQueryParam(redhatClient, redhatClientID);
+    };
+
+    strata.setSecureSupportPortal = function (flag) {
+        secureSupportPortal = flag;
+        secureSupportPathPrefix = secureSupportPortal ? '/secure-support' : '';
     };
 
     strata.addAccountNumber = function (id) {
@@ -347,7 +354,7 @@
         if (!$.isFunction(loginHandler)) { throw 'loginHandler callback must be supplied'; }
 
         checkCredentials = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/users/current'),
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/users/current'),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
             },
@@ -372,7 +379,7 @@
         if (limit === undefined) { limit = 50; }
 
         var getSolutionsFromText = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/problems')
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/problems')
                 .addQueryParam('limit', limit),
             data: data,
             type: 'POST',
@@ -401,7 +408,7 @@
         if (limit === undefined) { limit = 50; }
         if (highlight === undefined) { highlight = false; }
 
-        var tmpUrl = strataHostname.clone().setPath('/rs/problems')
+        var tmpUrl = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/problems')
                 .addQueryParam('limit', limit).addQueryParam('highlight', highlight);
         if(highlightTags !== undefined){
             tmpUrl.addQueryParam('highlightTags', highlightTags);
@@ -438,7 +445,7 @@
         if (limit == null) limit = 50;
         if (start == null) start = 0;
 
-        var url = strataHostname.clone().setPath('/rs/recommendations')
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/recommendations')
             .addQueryParam('rows', String(limit))
             .addQueryParam('start', String(start)) // jsUri fubar's 0, it doesn't add it as a number, must force it to a string to be safe
             .addQueryParam('fl', '*,score')
@@ -484,7 +491,7 @@
         }
 
         fetchUser = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/users/' + userId),
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/users/' + userId),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
             },
@@ -504,7 +511,7 @@
         if(userSSO == null || userSSO.length === 0) { throw 'user SSO must be specified'; }
 
         fetchUserBySSO = $.extend({}, baseAjaxParams,  {
-            url: strataHostname.clone().setPath('/rs/users').addQueryParam('ssoUserName', userSSO),
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/users').addQueryParam('ssoUserName', userSSO),
             headers: {
                 accept: 'application/json'
             },
@@ -524,7 +531,7 @@
 
 
         fetchUserChatSession = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/users/current/chatSession'),
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/users/current/chatSession'),
             type: 'POST',
             method: 'POST',
             headers: {
@@ -554,7 +561,7 @@
             url = new Uri(solution);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/solutions/' + solution);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/solutions/' + solution);
         }
 
         fetchSolution = $.extend({}, baseAjaxParams, {
@@ -579,7 +586,7 @@
         if (chain === undefined) {chain = false; }
 
         var searchSolutions = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/solutions')
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/solutions')
                 .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
             success: function (response) {
@@ -608,7 +615,7 @@
         if(solution === undefined) { throw 'solution must be defined'; }
 
         createSolution = $.extend({}, baseAjaxParams, {
-            url: strataHostname.clone().setPath('/rs/solutions'),
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/solutions'),
             data: JSON.stringify(solution),
             type: 'POST',
             method: 'POST',
@@ -637,7 +644,7 @@
             url = new Uri(article);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/articles/' + article);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/articles/' + article);
         }
 
         fetchArticle = $.extend({}, baseAjaxParams, {
@@ -665,7 +672,7 @@
         if (limit === undefined) {limit = 50; }
         if (chain === undefined) {chain = false; }
 
-        var url = strataHostname.clone().setPath('/rs/articles');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/articles');
         url.addQueryParam('keyword', keyword);
         url.addQueryParam('limit', limit);
 
@@ -709,7 +716,7 @@
             url = new Uri(casenum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum);
         }
 
         fetchCase = $.extend({}, baseAjaxParams, {
@@ -743,7 +750,7 @@
             url = new Uri(casenum + '/comments');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/comments/' + commentId);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/comments/' + commentId);
         }
 
         fetchCaseComments = $.extend({}, baseAjaxParams, {
@@ -773,7 +780,7 @@
             url = new Uri(casenum + '/comments');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/comments');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/comments');
         }
 
         fetchCaseComments = $.extend({}, baseAjaxParams, {
@@ -804,7 +811,7 @@
             url = new Uri(casenum + '/externalTrackerUpdates');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/externalTrackerUpdates');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/externalTrackerUpdates');
         }
 
         fetchCaseExternalUpdates = $.extend({}, baseAjaxParams, {
@@ -837,7 +844,7 @@
             url = new Uri(casenum + '/comments');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/comments');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/comments');
         }
 
         createComment = $.extend({}, baseAjaxParams, {
@@ -878,7 +885,7 @@
             closed = 'false';
         }
 
-        var url = strataHostname.clone().setPath('/rs/cases');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases');
         url.addQueryParam('includeClosed', closed);
 
         fetchCases = $.extend({}, baseAjaxParams, {
@@ -983,7 +990,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/cases');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases');
         prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams);
         url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
 
@@ -1059,7 +1066,7 @@
             url = new Uri(casenum + '/notified_users');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/notified_users');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/notified_users');
         }
 
         addNotifiedUser = $.extend({}, baseAjaxParams, {
@@ -1089,7 +1096,7 @@
         if (casenum === undefined) { onFailure('casenum must be defined'); }
         if (ssoUserName === undefined) { onFailure('ssoUserName must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/notified_users/' + encodeURIComponent(ssoUserName));
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/notified_users/' + encodeURIComponent(ssoUserName));
 
         removeNotifiedUser = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1110,7 +1117,7 @@
 
     //List cases in CSV for the given user
     strata.cases.csv = function (onSuccess, onFailure) {
-        var url = strataHostname.clone().setPath('/rs/cases');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases');
 
         fetchCasesCSV = $.extend({}, baseAjaxParams, {
             headers: {
@@ -1135,7 +1142,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (casefilter === undefined) { onFailure('casefilter must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/cases/filter');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/filter');
 
         //Remove any 0 length fields
         removeEmpty(casefilter);
@@ -1168,7 +1175,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (casedata === undefined) { onFailure('casedata must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/cases');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases');
 
         createAttachment = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1208,7 +1215,7 @@
             url = new Uri(casenum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum);
         }
 
         var successCallback = function() {
@@ -1249,7 +1256,7 @@
             url = new Uri(casenum + '/attachments');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/attachments');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/attachments');
         }
 
         listCaseAttachments = $.extend({}, baseAjaxParams, {
@@ -1283,7 +1290,7 @@
             url = new Uri(casenum + '/attachments');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/attachments');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/attachments');
         }
         if (isPrivate){
             url.addQueryParam("private", isPrivate);
@@ -1346,7 +1353,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (casenum === undefined) { onFailure('casenum must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/internal/cases/' + casenum + '/changeowner').addQueryParam('contactSsoName', ssoUserName.toString());
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/internal/cases/' + casenum + '/changeowner').addQueryParam('contactSsoName', ssoUserName.toString());
 
         updateOwner = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1370,7 +1377,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (data === undefined) { onFailure('data must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/symptoms/extractor');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/symptoms/extractor');
 
         getSymptomsFromText = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1402,9 +1409,9 @@
 
         var url;
         if (ssoUserName === undefined) {
-            url = strataHostname.clone().setPath('/rs/groups');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/groups');
         } else {
-            url = strataHostname.clone().setPath('/rs/groups/contact/' + encodeURIComponent(ssoUserName));
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/groups/contact/' + encodeURIComponent(ssoUserName));
         }
 
         listGroups = $.extend({}, baseAjaxParams, {
@@ -1429,7 +1436,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (groupName === undefined) { onFailure('groupName must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/groups');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/groups');
         url.addQueryParam(redhatClient, redhatClientID);
 
         var throwError = function(xhr, response, status) {
@@ -1467,7 +1474,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (group === undefined) { onFailure('group must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/groups/' + group.number);
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/groups/' + group.number);
 
         var throwError = function(xhr, response, status) {
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
@@ -1504,7 +1511,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (group === undefined) { onFailure('group must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/groups/' + group.number + '/default/');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/groups/' + group.number + '/default/');
 
         var throwError = function(xhr, response, status) {
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
@@ -1534,7 +1541,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (groupnum === undefined) { onFailure('groupnum must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/groups/' + groupnum);
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/groups/' + groupnum);
         url.addQueryParam(redhatClient, redhatClientID);
 
         var throwError = function(xhr, response, status) {
@@ -1569,7 +1576,7 @@
             url = new Uri(groupnum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/groups/' + groupnum);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/groups/' + groupnum);
         }
 
         fetchGroup = $.extend({}, baseAjaxParams, {
@@ -1590,7 +1597,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (users === undefined || users === accountId || users === groupnum) { onFailure('users, accountID and groupnum must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/account/'+ accountId + '/groups/' + groupnum + '/users');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/account/'+ accountId + '/groups/' + groupnum + '/users');
 
         var throwError = function(xhr, response, status) {
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
@@ -1623,9 +1630,9 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/products/contact/' + encodeURIComponent(ssoUserName));
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/products/contact/' + encodeURIComponent(ssoUserName));
         if (ssoUserName === undefined) {
-            url = strataHostname.clone().setPath('/rs/products');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/products');
         }
 
         listProducts = $.extend({}, baseAjaxParams, {
@@ -1655,7 +1662,7 @@
             url = new Uri(code);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/products/' + code);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/products/' + code);
         }
 
         fetchProduct = $.extend({}, baseAjaxParams, {
@@ -1679,7 +1686,7 @@
             url = new Uri(code + '/versions');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/products/' + code + '/versions');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/products/' + code + '/versions');
         }
 
         fetchProductVersions = $.extend({}, baseAjaxParams, {
@@ -1708,7 +1715,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/values/case/types');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/values/case/types');
 
         caseTypes = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1731,7 +1738,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/values/case/severity');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/values/case/severity');
 
         caseSeverities = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1754,7 +1761,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/values/case/status');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/values/case/status');
 
         caseStatus = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1777,7 +1784,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/values/case/attachment/size');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/values/case/attachment/size');
 
         attachmentMaxSize = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1800,7 +1807,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/values/businesshours');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/values/businesshours');
         url.addQueryParam('timezone', timezone);
 
         businesshours = $.extend({}, baseAjaxParams, {
@@ -1830,7 +1837,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/system_profiles');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/system_profiles');
 
         fetchSystemProfiles = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1860,7 +1867,7 @@
             url = new Uri(casenum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/system_profiles/' + casenum);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/system_profiles/' + casenum);
         }
 
         fetchSystemProfile = $.extend({}, baseAjaxParams, {
@@ -1887,7 +1894,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (systemprofile === undefined) { onFailure('systemprofile must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/system_profiles');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/system_profiles');
 
         createSystemProfile = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1916,7 +1923,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (closed === undefined) { closed = false; }
 
-        var url = strataHostname.clone().setPath('/rs/accounts');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/accounts');
 
         fetchAccounts = $.extend({}, baseAjaxParams, {
             url: url,
@@ -1939,7 +1946,7 @@
             url = new Uri(accountnum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/accounts/' + accountnum);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/accounts/' + accountnum);
         }
 
         fetchAccount = $.extend({}, baseAjaxParams, {
@@ -1963,10 +1970,10 @@
             url = new Uri(accountnum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else if (group === undefined || group === "-1") {
-            url = strataHostname.clone().setPath('/rs/accounts/' + accountnum + '/users');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/accounts/' + accountnum + '/users');
         } else {
             url = strataHostname.clone()
-                .setPath('/rs/accounts/' + accountnum + '/groups/' + group + '/users');
+                .setPath(secureSupportPathPrefix+'/rs/accounts/' + accountnum + '/groups/' + group + '/users');
         }
 
         fetchAccountUsers = $.extend({}, baseAjaxParams, {
@@ -1991,7 +1998,7 @@
         if(accountNumber == null) { throw 'Account number must be specified'; }
         if(ssoName == null) { throw 'Contact SSO must be specified'; }
 
-        var url = strataHostname.clone().setPath('/rs/accounts/bookmarks');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/accounts/bookmarks');
         var addBookmark = $.extend({}, baseAjaxParams, {
             url: url,
             data: JSON.stringify({
@@ -2016,7 +2023,7 @@
         if(accountNumber == null) { throw 'Account number must be specified'; }
         if(ssoName == null) { throw 'Contact SSO must be specified'; }
 
-        var url = strataHostname.clone().setPath('/rs/accounts/' + accountNumber + '/bookmarks');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/accounts/' + accountNumber + '/bookmarks');
         url.addQueryParam('contactSsoName', ssoName);
 
         var removeBookmark = $.extend({}, baseAjaxParams, {
@@ -2043,7 +2050,7 @@
             url = new Uri(accountnum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/accounts/customer/' + accountnum);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/accounts/customer/' + accountnum);
         }
 
         fetchAccount = $.extend({}, baseAjaxParams, {
@@ -2067,7 +2074,7 @@
             url = new Uri(accountnum);
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/accounts/partner/' + accountnum);
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/accounts/partner/' + accountnum);
         }
 
         fetchAccount = $.extend({}, baseAjaxParams, {
@@ -2087,9 +2094,9 @@
 
         var url;
         if (ssoUserName === undefined) {
-            url = strataHostname.clone().setPath('/rs/entitlements?showAll=' + showAll.toString());
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/entitlements?showAll=' + showAll.toString());
         } else {
-            url = strataHostname.clone().setPath('/rs/entitlements/contact/' + encodeURIComponent(ssoUserName) + '?showAll=' + showAll.toString());
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/entitlements/contact/' + encodeURIComponent(ssoUserName) + '?showAll=' + showAll.toString());
         }
 
         fetchEntitlements = $.extend({}, baseAjaxParams, {
@@ -2129,7 +2136,7 @@
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
             },
-            url: strataHostname.clone().setPath('/rs/search')
+            url: strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/search')
                 .addQueryParam('q', q)
                 .addQueryParam('fl', '*, score') // this will add the score to each response
                 .addQueryParam('fq', 'documentKind:(Solution OR Article)')
@@ -2160,7 +2167,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/health/sfdc');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/health/sfdc');
 
         fetchSfdcHealth = $.extend({}, baseAjaxParams, {
             url: url,
@@ -2229,9 +2236,9 @@
 
         var url;
         if (ssoUserName === undefined) {
-            url = strataHostname.clone().setPath('/rs/chats');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/chats');
         } else {
-            url = strataHostname.clone().setPath('/rs/chats').addQueryParam('ssoName', ssoUserName.toString());;
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/chats').addQueryParam('ssoName', ssoUserName.toString());;
         }
 
         fetchChatTranscript = $.extend({}, baseAjaxParams, {
@@ -2253,7 +2260,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (escalationData === undefined) { onFailure('escalation data must be defined'); }
 
-        var url = strataHostname.clone().setPath('/rs/escalations');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/escalations');
 
         createEscalation = $.extend({}, baseAjaxParams, {
             url: url,
@@ -2289,7 +2296,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/cases?'+query);
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases?'+query);
         caseReviewSelector = $.extend({}, baseAjaxParams, {
             url: url,
             headers: {
@@ -2313,7 +2320,7 @@
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
-        var url = strataHostname.clone().setPath('/rs/recommendations?'+query);
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/recommendations?'+query);
         solutionReviewSelector = $.extend({}, baseAjaxParams, {
             url: url,
             headers: {
@@ -2345,7 +2352,7 @@
             url = new Uri(casenum + '/comments');
             url.addQueryParam(redhatClient, redhatClientID);
         } else {
-            url = strataHostname.clone().setPath('/rs/cases/' + casenum + '/symptoms');
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/symptoms');
         }
 
         fetchCaseSymptoms = $.extend({}, baseAjaxParams, {
@@ -2371,7 +2378,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (limit === undefined) { onFailure('limit must be defined'); }
 
-        var url=strataHostname.clone().setPath('/rs/problems').addQueryParam('onlySymptoms', isOnlySymptoms).addQueryParam('limit', limit);
+        var url=strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/problems').addQueryParam('onlySymptoms', isOnlySymptoms).addQueryParam('limit', limit);
 
         symptomSolutions = $.extend({}, baseAjaxParams, {
             url: url,
