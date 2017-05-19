@@ -115,9 +115,9 @@
         strataHostname.replaceQueryParam(redhatClient, redhatClientID);
     };
 
-    strata.isSecureSupportPortal = function (flag) {
+    strata.setSecureSupportPortal = function (flag) {
         secureSupportPortal = flag;
-        secureSupportPathPrefix = '/secure-support'
+        secureSupportPathPrefix = secureSupportPortal ? '/secure-support' : '';
     };
 
     strata.addAccountNumber = function (id) {
