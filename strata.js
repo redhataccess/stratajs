@@ -1160,7 +1160,7 @@
         if (casenum === undefined) { onFailure('casenum must be defined'); }
         if (sbrGroups === undefined) { onFailure('ssoUserName must be defined'); }
 
-        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/sbr/');
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/sbr');
 
         removeCaseSbrs = $.extend({}, baseAjaxParams, {
             url: url,
