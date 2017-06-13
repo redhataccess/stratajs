@@ -933,6 +933,10 @@
                 concatQueryString(caseStatusQuery + 'Waiting*');
             } else if (caseStatus.toLowerCase() === 'closed') {
                 concatQueryString(caseStatusQuery + 'Closed*');
+            } else if (caseStatus.toLowerCase() === 'worh') {
+                concatQueryString(caseStatusQuery + '*Red*'); // Case status that matches waiting on red hat
+            } else if (caseStatus.toLowerCase() === 'wocust') {
+                concatQueryString(caseStatusQuery + '*Customer*'); // Case status that matches waiting on customer
             } else{
                 concatQueryString(caseStatusQuery + '*');
             }
