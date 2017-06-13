@@ -90,7 +90,9 @@
         attachmentMaxSize,
         fetchCaseSymptoms,
         symptomSolutions,
-        createSolution;
+        createSolution,
+        addCaseSbrs,
+        removeCaseSbrs;
 
     strata.version = '1.4.8';
     redhatClientID = 'stratajs-' + strata.version;
@@ -704,6 +706,7 @@
     strata.cases.notified_users = {};
     strata.cases.owner = {};
     strata.cases.externalUpdates = {};
+    strata.cases.sbrs = {};
 
     //Retrieve a case
     strata.cases.get = function (casenum, onSuccess, onFailure) {
@@ -1117,6 +1120,68 @@
             }
         });
         $.ajax(removeNotifiedUser);
+    };
+
+    //Add Sbrs to case
+    strata.cases.sbrs.add = function (casenum, sbrGroups, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (casenum === undefined) { onFailure('casenum must be defined'); }
+        if (sbrGroups === undefined) { onFailure('sbrGroups must be defined'); }
+
+        var url;
+        if (isUrl(casenum)) {
+            url = new Uri(casenum + '/sbr');
+            url.addQueryParam(redhatClient, redhatClientID);
+        } else {
+            url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/sbr');
+        }
+
+        addCaseSbrs = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: JSON.stringify(sbrGroups),
+            type: 'POST',
+            method: 'POST',
+            contentType: 'application/json',
+            headers: {
+                Accept: 'text/plain'
+            },
+            dataType: 'text',
+            success: onSuccess,
+            statusCode: {
+                201: onSuccess
+            },
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(addCaseSbrs);
+    };
+
+    strata.cases.sbrs.remove = function (casenum, sbrGroups, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (casenum === undefined) { onFailure('casenum must be defined'); }
+        if (sbrGroups === undefined) { onFailure('ssoUserName must be defined'); }
+
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases/' + casenum + '/sbr');
+
+        removeCaseSbrs = $.extend({}, baseAjaxParams, {
+            url: url,
+            data: JSON.stringify(sbrGroups),
+            type: 'DELETE',
+            method: 'DELETE',
+            contentType: 'application/json',
+            headers: {
+                Accept: 'text/plain'
+            },
+            dataType: 'text',
+            success: onSuccess,
+            error: function (xhr, reponse, status) {
+                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+            }
+        });
+        $.ajax(removeCaseSbrs);
     };
 
     //List cases in CSV for the given user
