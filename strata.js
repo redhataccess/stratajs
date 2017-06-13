@@ -1135,7 +1135,7 @@
 
         addCaseSbrs = $.extend({}, baseAjaxParams, {
             url: url,
-            data: sbrGroups,
+            data: JSON.stringify(sbrGroups),
             type: 'POST',
             method: 'POST',
             contentType: 'application/json',
@@ -1164,10 +1164,10 @@
 
         removeCaseSbrs = $.extend({}, baseAjaxParams, {
             url: url,
-            data: sbrGroups,
+            data: JSON.stringify(sbrGroups),
             type: 'DELETE',
             method: 'DELETE',
-            contentType: 'text/plain',
+            contentType: 'application/json',
             headers: {
                 Accept: 'text/plain'
             },
