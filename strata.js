@@ -43,6 +43,7 @@
         fetchSolution,
         fetchArticle,
         searchArticles,
+        sendCaseNum,
         fetchCase,
         fetchCaseComments,
         fetchCaseExternalUpdates,
@@ -707,6 +708,32 @@
     strata.cases.owner = {};
     strata.cases.externalUpdates = {};
     strata.cases.sbrs = {};
+    strata.solutionEngine = {};
+
+    //Sending new case number to Solution Engine as per the guid
+    // https://projects.engineering.redhat.com/browse/PCM-5350
+    strata.solutionEngine.sendCaseNumber = function (caseNumObj, guid, onSuccess, onFailure) {
+        if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
+        if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
+        if (caseNumObj === undefined) { onFailure('casenum must be defined'); }
+
+        var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/se/session/' + guid );
+
+        sendCaseNum = $.extend({}, baseAjaxParams, {
+            url: url,
+            type: 'PUT',
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(caseNumObj),
+            statusCode: {
+                200: function() {
+                    onSuccess();
+                },
+                400: onFailure
+            }
+        });
+        $.ajax(sendCaseNum);
+    };
 
     //Retrieve a case
     strata.cases.get = function (casenum, onSuccess, onFailure) {
