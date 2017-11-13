@@ -936,7 +936,7 @@
     };
 
     //Utility wrapper for preparing SOLR query
-    function prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams) {
+    function prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, start) {
         var solrQueryString = "";
         var concatQueryString = function(param){
             if(solrQueryString === ""){
@@ -1001,6 +1001,9 @@
         if (!isObjectNothing(offset)) {
             url.addQueryParam('offset', offset);
         }
+        if (!isObjectNothing(start)) {
+            url.addQueryParam('start', start);
+        }
         if (!isObjectNothing(limit)) {
             url.addQueryParam('limit', limit);
         }
@@ -1020,12 +1023,12 @@
     //9.limit - how many results to fetch (50 by default)
     //10.queryParams - should be a list of params (identifier:value) to be added to the search query
     //11.addlQueryParams - additional query params to be appended at the end of the query, begin with '&'
-    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams) {
+    strata.cases.search = function (onSuccess, onFailure, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, start) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix+'/rs/cases');
-        prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams);
+        prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, start);
         url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
 
         searchCases = $.extend({}, baseAjaxParams, {
