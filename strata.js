@@ -1504,7 +1504,7 @@
                     xhr.upload.addEventListener("progress", function(evt) {
                         if (evt.lengthComputable) {
                             var percentComplete = evt.loaded * 100 / evt.total;
-                            onProgress(percentComplete);
+                            onProgress(percentComplete, () => xhr.abort());
                         }
                     }, false);
                 }
@@ -1518,11 +1518,17 @@
             contentType: false,
             cache: false,
             success: onSuccess,
-            error: function (xhr, reponse, status) {
+            error: function (xhr, response, status) {
                 if(xhr.status == 401) {
                     reportToSentry('POST', '/rs/cases/attachments', 'strata.cases.attachment.post');
                 }
-                onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
+
+                // When xhr.getAllResponseHeaders() doesn't exist the xhr request has been manually aborted.
+                if (xhr.getAllResponseHeaders()) {
+                    onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
+                } else {
+                    onFailure('aborted', xhr, response, status)
+                }
             }
         });
         $.ajax(createAttachment);
