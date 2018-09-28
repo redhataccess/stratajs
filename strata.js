@@ -1504,7 +1504,11 @@
                     xhr.upload.addEventListener("progress", function(evt) {
                         if (evt.lengthComputable) {
                             var percentComplete = evt.loaded * 100 / evt.total;
-                            onProgress(percentComplete, () => xhr.abort());
+                            var abort = function () {
+                                xhr.abort();
+                            };
+
+                            onProgress(percentComplete, abort);
                         }
                     }, false);
                 }
