@@ -1304,9 +1304,8 @@
     };
 
     //List cases in CSV for the given user
-    strata.cases.csv = function (onSuccess, onFailure, caseFields) {
+    strata.cases.csv = function (onSuccess, onFailure) {
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases');
-        caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
         fetchCasesCSV = $.extend({}, baseAjaxParams, {
             headers: {
