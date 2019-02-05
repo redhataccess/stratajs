@@ -787,7 +787,7 @@
     };
 
     //Retrieve a case
-    strata.cases.get = function (casenum, onSuccess, onFailure, caseFields) {
+    strata.cases.get = function (casenum, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (casenum === undefined) { onFailure('casenum must be defined'); }
@@ -799,7 +799,6 @@
         } else {
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum);
         }
-        caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
         fetchCase = $.extend({}, baseAjaxParams, {
             url: url,
@@ -971,7 +970,7 @@
     };
 
     //List cases for the given user
-    strata.cases.list = function (onSuccess, onFailure, closed, caseFields) {
+    strata.cases.list = function (onSuccess, onFailure, closed) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (closed === undefined) { closed = 'false'; }
@@ -982,7 +981,6 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases');
         url.addQueryParam('includeClosed', closed);
-        caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
 
         fetchCases = $.extend({}, baseAjaxParams, {
@@ -1331,14 +1329,13 @@
     };
 
     //Filter cases
-    strata.cases.filter = function (casefilter, partnerSearch, onSuccess, onFailure, caseFields) {
+    strata.cases.filter = function (casefilter, partnerSearch, onSuccess, onFailure) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (casefilter === undefined) { onFailure('casefilter must be defined'); }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/filter');
         url.addQueryParam('partnerSearch', partnerSearch);
-        caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
         //Remove any 0 length fields
         removeEmpty(casefilter);
