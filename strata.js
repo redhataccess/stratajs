@@ -98,6 +98,26 @@
     strata.version = '1.4.8';
     redhatClientID = 'stratajs-' + strata.version;
 
+    function getIsTokenExpired() {
+        if (window.sessionjs && window.sessionjs.isTokenExpired) {
+            return window.sessionjs.isTokenExpired;
+        }
+        else {
+            // For PCM we use the below line because in sessionjs we don't get the isTokenExpired() function directly
+            // also it throws an error in PCM - window.sessionjs.isTokenExpired() is not a function
+            if (window.sessionjs && window.sessionjs._state && window.sessionjs._state.keycloak) {
+                return window.sessionjs._state.keycloak.isTokenExpired;
+            }
+        }
+    }
+    // If the token is expiring within 30 seconds, go ahead and refresh it.  Using 30 seconds considering jwt.js checks if
+    // the token needs to be refreshed every 58 seconds with a TTE of 90 seconds.  So 30 seconds guarantees that
+    // we are at the boundary of what jwt.js does without overlapping a great deal
+    function isTokenExpired() {
+        var _isTokenExpired = getIsTokenExpired();
+        return _isTokenExpired(30);
+    }
+
     // function for reporting error to sentry
     function reportToSentry(method, path, generatedBy) {
         if (window.sessionjs && window.sessionjs.reportProblem) {
@@ -885,6 +905,9 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
+
+        isTokenExpired() && await window.sessionjs.updateToken(true);
+        
         $.ajax(fetchCaseComments);
     };
 
@@ -919,6 +942,8 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
+        
+        isTokenExpired() && await window.sessionjs.updateToken(true);
         $.ajax(fetchCaseExternalUpdates);
     };
 
