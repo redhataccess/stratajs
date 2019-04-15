@@ -95,7 +95,7 @@
         addCaseSbrs,
         removeCaseSbrs;
 
-    strata.version = '1.4.8';
+    strata.version = '1.6.4';
     redhatClientID = 'stratajs-' + strata.version;
 
     function getIsTokenExpired() {
