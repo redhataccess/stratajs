@@ -119,8 +119,9 @@
     }
 
     function handleJWTandCallAjax(ajaxParams) {
-        isTokenExpired() && await window.sessionjs.updateToken(true);
-        $.ajax($.extend({}, baseAjaxParams, ajaxParams));
+        isTokenExpired() && window.sessionjs.updateToken(true).success(function() {
+            $.ajax($.extend({}, baseAjaxParams, ajaxParams));
+        });
     }
 
     // function for reporting error to sentry
