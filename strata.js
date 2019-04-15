@@ -118,9 +118,9 @@
         return _isTokenExpired(30);
     }
 
-    function callAjaxAndHandleJWT(ajaxObj) {
+    function handleJWTandCallAjax(ajaxParams) {
         isTokenExpired() && await window.sessionjs.updateToken(true);
-        $.ajax($.extend({}, baseAjaxParams, ajaxObj));
+        $.ajax($.extend({}, baseAjaxParams, ajaxParams));
     }
 
     // function for reporting error to sentry
@@ -397,7 +397,7 @@
     strata.checkLogin = function (loginHandler) {
         if (!$.isFunction(loginHandler)) { throw 'loginHandler callback must be supplied'; }
 
-        checkCredentials = callAjaxAndHandleJWT({
+        checkCredentials = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users/current'),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
@@ -421,7 +421,7 @@
         if (data === undefined) { data = ''; }
         if (limit === undefined) { limit = 50; }
 
-        var getSolutionsFromText = callAjaxAndHandleJWT({
+        var getSolutionsFromText = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/problems')
                 .addQueryParam('limit', limit),
             data: data,
@@ -459,7 +459,7 @@
             tmpUrl.addQueryParam('highlightTags', highlightTags);
         }
 
-        var getRecommendationsFromText = callAjaxAndHandleJWT({
+        var getRecommendationsFromText = handleJWTandCallAjax({
             url: tmpUrl,
             data: JSON.stringify(data),
             type: 'POST',
@@ -508,7 +508,7 @@
             if (highlightTagPost !== undefined) url.addQueryParam('hl.simple.post', highlightTagPost)
         }
 
-        var getRecommendationsFromCase = callAjaxAndHandleJWT({
+        var getRecommendationsFromCase = handleJWTandCallAjax({
             url: url.toString(),
             data: JSON.stringify(data),
             type: 'POST',
@@ -540,7 +540,7 @@
             userId = 'current';
         }
 
-        fetchUser = callAjaxAndHandleJWT({
+        fetchUser = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users/' + userId),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
@@ -562,7 +562,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (userSSO == null || userSSO.length === 0) { throw 'user SSO must be specified'; }
 
-        fetchUserBySSO = callAjaxAndHandleJWT({
+        fetchUserBySSO = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users').addQueryParam('ssoUserName', userSSO),
             headers: {
                 accept: 'application/json'
@@ -584,7 +584,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
 
-        fetchUserChatSession = callAjaxAndHandleJWT({
+        fetchUserChatSession = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users/current/chatSession'),
             type: 'POST',
             method: 'POST',
@@ -620,7 +620,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/solutions/' + solution);
         }
 
-        fetchSolution = callAjaxAndHandleJWT({
+        fetchSolution = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 convertDates(response);
@@ -643,7 +643,7 @@
         if (limit === undefined) { limit = 50; }
         if (chain === undefined) { chain = false; }
 
-        var searchSolutions = callAjaxAndHandleJWT({
+        var searchSolutions = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/solutions')
                 .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
@@ -674,7 +674,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (solution === undefined) { throw 'solution must be defined'; }
 
-        createSolution = callAjaxAndHandleJWT({
+        createSolution = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/solutions'),
             data: JSON.stringify(solution),
             type: 'POST',
@@ -709,7 +709,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/articles/' + article);
         }
 
-        fetchArticle = callAjaxAndHandleJWT({
+        fetchArticle = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 convertDates(response);
@@ -740,7 +740,7 @@
         url.addQueryParam('keyword', keyword);
         url.addQueryParam('limit', limit);
 
-        searchArticles = callAjaxAndHandleJWT({
+        searchArticles = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (chain && response.article !== undefined) {
@@ -782,7 +782,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/se/session/' + guid);
 
-        sendCaseNum = callAjaxAndHandleJWT({
+        sendCaseNum = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -812,7 +812,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum);
         }
 
-        fetchCase = callAjaxAndHandleJWT({
+        fetchCase = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response) {
@@ -848,7 +848,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/comments/' + commentId);
         }
 
-        fetchCaseComments = callAjaxAndHandleJWT({
+        fetchCaseComments = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -878,7 +878,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/comments');
         }
 
-        fetchCaseComments = callAjaxAndHandleJWT({
+        fetchCaseComments = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.comment !== undefined) {
@@ -895,9 +895,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-
-        isTokenExpired() && await window.sessionjs.updateToken(true);
-
     };
 
     //List External Updates
@@ -914,7 +911,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/externalTrackerUpdates');
         }
 
-        fetchCaseExternalUpdates = callAjaxAndHandleJWT({
+        fetchCaseExternalUpdates = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.external_tracker_update !== undefined) {
@@ -931,8 +928,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-
-        isTokenExpired() && await window.sessionjs.updateToken(true);
     };
 
     //TODO: Support DRAFT comments? Only useful for internal
@@ -951,7 +946,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/comments');
         }
 
-        createComment = callAjaxAndHandleJWT({
+        createComment = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casecomment),
             type: 'POST',
@@ -995,7 +990,7 @@
         url.addQueryParam('includeClosed', closed);
 
 
-        fetchCases = callAjaxAndHandleJWT({
+        fetchCases = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response['case'] !== undefined) {
@@ -1112,7 +1107,7 @@
         url.addQueryParam('partnerSearch', partnerSearch);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
-        searchCases = callAjaxAndHandleJWT({
+        searchCases = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response['case'] !== undefined) {
@@ -1147,7 +1142,7 @@
             url.addQueryParam('sort', order);
         }
 
-        advancedSearchCases = callAjaxAndHandleJWT({
+        advancedSearchCases = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (format == 'csv') {
@@ -1192,7 +1187,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/notified_users');
         }
 
-        addNotifiedUser = callAjaxAndHandleJWT({
+        addNotifiedUser = handleJWTandCallAjax({
             url: url,
             data: '{"user": [{"ssoUsername":"' + ssoUserName + '"}]}',
             type: 'POST',
@@ -1223,7 +1218,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/notified_users/' + encodeURIComponent(ssoUserName));
 
-        removeNotifiedUser = callAjaxAndHandleJWT({
+        removeNotifiedUser = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -1257,7 +1252,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/sbr');
         }
 
-        addCaseSbrs = callAjaxAndHandleJWT({
+        addCaseSbrs = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(sbrGroups),
             type: 'POST',
@@ -1288,7 +1283,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/sbr');
 
-        removeCaseSbrs = callAjaxAndHandleJWT({
+        removeCaseSbrs = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(sbrGroups),
             type: 'DELETE',
@@ -1312,7 +1307,7 @@
     strata.cases.csv = function (onSuccess, onFailure) {
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases');
 
-        fetchCasesCSV = callAjaxAndHandleJWT({
+        fetchCasesCSV = handleJWTandCallAjax({
             headers: {
                 Accept: 'text/csv'
             },
@@ -1343,7 +1338,7 @@
         //Remove any 0 length fields
         removeEmpty(casefilter);
 
-        filterCases = callAjaxAndHandleJWT({
+        filterCases = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casefilter),
             contentType: 'application/json',
@@ -1375,7 +1370,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases');
 
-        createAttachment = callAjaxAndHandleJWT({
+        createAttachment = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casedata),
             type: 'POST',
@@ -1422,7 +1417,7 @@
             onSuccess();
         };
 
-        updateCase = callAjaxAndHandleJWT({
+        updateCase = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casedata),
             type: 'PUT',
@@ -1461,7 +1456,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/attachments');
         }
 
-        listCaseAttachments = callAjaxAndHandleJWT({
+        listCaseAttachments = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.attachment === undefined) {
@@ -1500,7 +1495,7 @@
             url.addQueryParam("private", isPrivate);
         }
 
-        createAttachment = callAjaxAndHandleJWT({
+        createAttachment = handleJWTandCallAjax({
             xhr: function () {
                 var xhr = new window.XMLHttpRequest();
                 if (onProgress != null && $.isFunction(onProgress)) {
@@ -1550,7 +1545,7 @@
             strataHostname.clone().setPath(
                 '/rs/cases/' + casenum + '/attachments/' + attachmentId
             );
-        deleteAttachment = callAjaxAndHandleJWT({
+        deleteAttachment = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -1573,7 +1568,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/internal/cases/' + casenum + '/changeowner').addQueryParam('contactSsoName', ssoUserName.toString());
 
-        updateOwner = callAjaxAndHandleJWT({
+        updateOwner = handleJWTandCallAjax({
             url: url,
             type: 'POST',
             method: 'POST',
@@ -1599,7 +1594,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/symptoms/extractor');
 
-        getSymptomsFromText = callAjaxAndHandleJWT({
+        getSymptomsFromText = handleJWTandCallAjax({
             url: url,
             data: data,
             type: 'POST',
@@ -1636,7 +1631,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/groups/contact/' + encodeURIComponent(ssoUserName));
         }
 
-        listGroups = callAjaxAndHandleJWT({
+        listGroups = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.group !== undefined) {
@@ -1667,7 +1662,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        createGroup = callAjaxAndHandleJWT({
+        createGroup = handleJWTandCallAjax({
             url: url,
             type: 'POST',
             method: 'POST',
@@ -1704,7 +1699,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        updateGroup = callAjaxAndHandleJWT({
+        updateGroup = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -1741,7 +1736,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        updateGroup = callAjaxAndHandleJWT({
+        updateGroup = handleJWTandCallAjax({
             url: url,
             type: 'POST',
             method: 'POST',
@@ -1772,7 +1767,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        deleteGroup = callAjaxAndHandleJWT({
+        deleteGroup = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -1803,7 +1798,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/groups/' + groupnum);
         }
 
-        fetchGroup = callAjaxAndHandleJWT({
+        fetchGroup = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -1829,7 +1824,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        updateGroupUsers = callAjaxAndHandleJWT({
+        updateGroupUsers = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -1861,7 +1856,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/products');
         }
 
-        listProducts = callAjaxAndHandleJWT({
+        listProducts = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.product !== undefined) {
@@ -1893,7 +1888,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/products/' + code);
         }
 
-        fetchProduct = callAjaxAndHandleJWT({
+        fetchProduct = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -1919,7 +1914,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/products/' + code + '/versions');
         }
 
-        fetchProductVersions = callAjaxAndHandleJWT({
+        fetchProductVersions = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.version !== undefined) {
@@ -1949,7 +1944,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/types');
 
-        caseTypes = callAjaxAndHandleJWT({
+        caseTypes = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.value !== undefined) {
@@ -1974,7 +1969,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/severity');
 
-        caseSeverities = callAjaxAndHandleJWT({
+        caseSeverities = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.value !== undefined) {
@@ -1999,7 +1994,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/status');
 
-        caseStatus = callAjaxAndHandleJWT({
+        caseStatus = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.value !== undefined) {
@@ -2024,7 +2019,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/attachment/size');
 
-        attachmentMaxSize = callAjaxAndHandleJWT({
+        attachmentMaxSize = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response !== undefined) {
@@ -2050,7 +2045,7 @@
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/businesshours');
         url.addQueryParam('timezone', timezone);
 
-        businesshours = callAjaxAndHandleJWT({
+        businesshours = handleJWTandCallAjax({
             url: url,
             headers: {
                 accept: 'application/vnd.redhat.businesshours+json'
@@ -2081,7 +2076,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/system_profiles');
 
-        fetchSystemProfiles = callAjaxAndHandleJWT({
+        fetchSystemProfiles = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.system_profile !== undefined) {
@@ -2114,7 +2109,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/system_profiles/' + casenum);
         }
 
-        fetchSystemProfile = callAjaxAndHandleJWT({
+        fetchSystemProfile = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if ($.isArray(response.system_profile)) {
@@ -2142,7 +2137,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/system_profiles');
 
-        createSystemProfile = callAjaxAndHandleJWT({
+        createSystemProfile = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(systemprofile),
             type: 'POST',
@@ -2173,7 +2168,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts');
 
-        fetchAccounts = callAjaxAndHandleJWT({
+        fetchAccounts = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2199,7 +2194,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/' + accountnum);
         }
 
-        fetchAccount = callAjaxAndHandleJWT({
+        fetchAccount = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2228,7 +2223,7 @@
                 .setPath(secureSupportPathPrefix + '/rs/accounts/' + accountnum + '/groups/' + group + '/users');
         }
 
-        fetchAccountUsers = callAjaxAndHandleJWT({
+        fetchAccountUsers = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.user !== undefined) {
@@ -2253,7 +2248,7 @@
         if (ssoName == null) { throw 'Contact SSO must be specified'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/bookmarks');
-        var addBookmark = callAjaxAndHandleJWT({
+        var addBookmark = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify({
                 accountNumber: accountNumber,
@@ -2282,7 +2277,7 @@
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/' + accountNumber + '/bookmarks');
         url.addQueryParam('contactSsoName', ssoName);
 
-        var removeBookmark = callAjaxAndHandleJWT({
+        var removeBookmark = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -2311,7 +2306,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/customer/' + accountnum);
         }
 
-        fetchAccount = callAjaxAndHandleJWT({
+        fetchAccount = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2337,7 +2332,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/partner/' + accountnum);
         }
 
-        fetchAccount = callAjaxAndHandleJWT({
+        fetchAccount = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2361,7 +2356,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/entitlements/contact/' + encodeURIComponent(ssoUserName) + '?showAll=' + showAll.toString());
         }
 
-        fetchEntitlements = callAjaxAndHandleJWT({
+        fetchEntitlements = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2396,7 +2391,7 @@
         if (rows === undefined) { rows = 50; }
         if (chain === undefined) { chain = false; }
 
-        var searchStrata = callAjaxAndHandleJWT({
+        var searchStrata = handleJWTandCallAjax({
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
             },
@@ -2435,7 +2430,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/health/sfdc');
 
-        fetchSfdcHealth = callAjaxAndHandleJWT({
+        fetchSfdcHealth = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 onSuccess(response);
@@ -2466,7 +2461,7 @@
     };
 
     strata.utils.getURI = function (uri, resourceType, onSuccess, onFailure) {
-        fetchURI = callAjaxAndHandleJWT({
+        fetchURI = handleJWTandCallAjax({
             url: uri,
             success: function (response) {
                 convertDates(response);
@@ -2511,7 +2506,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/chats').addQueryParam('ssoName', ssoUserName.toString());;
         }
 
-        fetchChatTranscript = callAjaxAndHandleJWT({
+        fetchChatTranscript = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2534,7 +2529,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/escalations');
 
-        createEscalation = callAjaxAndHandleJWT({
+        createEscalation = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(escalationData),
             type: 'POST',
@@ -2571,7 +2566,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases?' + query);
-        caseReviewSelector = callAjaxAndHandleJWT({
+        caseReviewSelector = handleJWTandCallAjax({
             url: url,
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
@@ -2597,7 +2592,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/recommendations?' + query);
-        solutionReviewSelector = callAjaxAndHandleJWT({
+        solutionReviewSelector = handleJWTandCallAjax({
             url: url,
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
@@ -2633,7 +2628,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/symptoms');
         }
 
-        fetchCaseSymptoms = callAjaxAndHandleJWT({
+        fetchCaseSymptoms = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.symptom !== undefined) {
@@ -2660,7 +2655,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/problems').addQueryParam('onlySymptoms', isOnlySymptoms).addQueryParam('limit', limit);
 
-        symptomSolutions = callAjaxAndHandleJWT({
+        symptomSolutions = handleJWTandCallAjax({
             url: url,
             data: data,
             type: 'POST',
