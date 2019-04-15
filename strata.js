@@ -95,8 +95,33 @@
         addCaseSbrs,
         removeCaseSbrs;
 
-    strata.version = '1.4.8';
+    strata.version = '1.6.4';
     redhatClientID = 'stratajs-' + strata.version;
+
+    function getIsTokenExpired() {
+        if (window.sessionjs && window.sessionjs.isTokenExpired) {
+            return window.sessionjs.isTokenExpired;
+        }
+        else {
+            // For PCM we use the below line because in sessionjs we don't get the isTokenExpired() function directly
+            // also it throws an error in PCM - window.sessionjs.isTokenExpired() is not a function
+            if (window.sessionjs && window.sessionjs._state && window.sessionjs._state.keycloak) {
+                return window.sessionjs._state.keycloak.isTokenExpired;
+            }
+        }
+    }
+    // If the token is expiring within 30 seconds, go ahead and refresh it.  Using 30 seconds considering jwt.js checks if
+    // the token needs to be refreshed every 58 seconds with a TTE of 90 seconds.  So 30 seconds guarantees that
+    // we are at the boundary of what jwt.js does without overlapping a great deal
+    function isTokenExpired() {
+        var _isTokenExpired = getIsTokenExpired();
+        return _isTokenExpired(30);
+    }
+
+    function handleJWTandCallAjax(ajaxParams) {
+        isTokenExpired() && await window.sessionjs.updateToken(true);
+        $.ajax($.extend({}, baseAjaxParams, ajaxParams));
+    }
 
     // function for reporting error to sentry
     function reportToSentry(method, path, generatedBy) {
@@ -372,7 +397,7 @@
     strata.checkLogin = function (loginHandler) {
         if (!$.isFunction(loginHandler)) { throw 'loginHandler callback must be supplied'; }
 
-        checkCredentials = $.extend({}, baseAjaxParams, {
+        checkCredentials = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users/current'),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
@@ -387,7 +412,6 @@
                 loginHandler(false);
             }
         });
-        $.ajax(checkCredentials);
     };
 
     //Sends data to the strata diagnostic toolchain
@@ -397,7 +421,7 @@
         if (data === undefined) { data = ''; }
         if (limit === undefined) { limit = 50; }
 
-        var getSolutionsFromText = $.extend({}, baseAjaxParams, {
+        var getSolutionsFromText = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/problems')
                 .addQueryParam('limit', limit),
             data: data,
@@ -420,7 +444,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(getSolutionsFromText);
     };
 
     strata.recommendations = function (data, onSuccess, onFailure, limit, highlight, highlightTags) {
@@ -436,7 +459,7 @@
             tmpUrl.addQueryParam('highlightTags', highlightTags);
         }
 
-        var getRecommendationsFromText = $.extend({}, baseAjaxParams, {
+        var getRecommendationsFromText = handleJWTandCallAjax({
             url: tmpUrl,
             data: JSON.stringify(data),
             type: 'POST',
@@ -460,7 +483,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(getRecommendationsFromText);
     };
 
     strata.recommendationsForCase = function (data, onSuccess, onFailure, limit, start, highlight, highlightTagPre, highlightTagPost) {
@@ -486,7 +508,7 @@
             if (highlightTagPost !== undefined) url.addQueryParam('hl.simple.post', highlightTagPost)
         }
 
-        var getRecommendationsFromCase = $.extend({}, baseAjaxParams, {
+        var getRecommendationsFromCase = handleJWTandCallAjax({
             url: url.toString(),
             data: JSON.stringify(data),
             type: 'POST',
@@ -506,7 +528,6 @@
             }
         });
 
-        $.ajax(getRecommendationsFromCase);
     };
 
     //Base for users
@@ -519,7 +540,7 @@
             userId = 'current';
         }
 
-        fetchUser = $.extend({}, baseAjaxParams, {
+        fetchUser = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users/' + userId),
             headers: {
                 accept: 'application/vnd.redhat.user+json'
@@ -534,7 +555,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchUser);
     };
 
     strata.users.getBySSO = function (onSuccess, onFailure, userSSO) {
@@ -542,7 +562,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (userSSO == null || userSSO.length === 0) { throw 'user SSO must be specified'; }
 
-        fetchUserBySSO = $.extend({}, baseAjaxParams, {
+        fetchUserBySSO = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users').addQueryParam('ssoUserName', userSSO),
             headers: {
                 accept: 'application/json'
@@ -557,7 +577,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
             }
         });
-        $.ajax(fetchUserBySSO);
     }
 
     strata.users.chatSession.get = function (onSuccess, onFailure) {
@@ -565,7 +584,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
 
-        fetchUserChatSession = $.extend({}, baseAjaxParams, {
+        fetchUserChatSession = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/users/current/chatSession'),
             type: 'POST',
             method: 'POST',
@@ -582,7 +601,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchUserChatSession);
     };
 
     //Base for solutions
@@ -602,7 +620,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/solutions/' + solution);
         }
 
-        fetchSolution = $.extend({}, baseAjaxParams, {
+        fetchSolution = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 convertDates(response);
@@ -615,7 +633,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchSolution);
     };
 
     //Search for solutions
@@ -626,7 +643,7 @@
         if (limit === undefined) { limit = 50; }
         if (chain === undefined) { chain = false; }
 
-        var searchSolutions = $.extend({}, baseAjaxParams, {
+        var searchSolutions = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/solutions')
                 .addQueryParam('keyword', keyword)
                 .addQueryParam('limit', limit),
@@ -649,7 +666,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(searchSolutions);
     };
 
     //Create a solution
@@ -658,7 +674,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (solution === undefined) { throw 'solution must be defined'; }
 
-        createSolution = $.extend({}, baseAjaxParams, {
+        createSolution = handleJWTandCallAjax({
             url: strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/solutions'),
             data: JSON.stringify(solution),
             type: 'POST',
@@ -674,7 +690,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
             }
         });
-        $.ajax(createSolution);
     };
 
     //Base for articles
@@ -694,7 +709,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/articles/' + article);
         }
 
-        fetchArticle = $.extend({}, baseAjaxParams, {
+        fetchArticle = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 convertDates(response);
@@ -711,7 +726,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchArticle);
     };
 
     //Search articles
@@ -726,7 +740,7 @@
         url.addQueryParam('keyword', keyword);
         url.addQueryParam('limit', limit);
 
-        searchArticles = $.extend({}, baseAjaxParams, {
+        searchArticles = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (chain && response.article !== undefined) {
@@ -747,7 +761,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(searchArticles);
     };
 
     //Base for cases
@@ -769,7 +782,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/se/session/' + guid);
 
-        sendCaseNum = $.extend({}, baseAjaxParams, {
+        sendCaseNum = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -783,7 +796,6 @@
                 401: reportToSentry('PUT', '/rs/se/session/', 'strata.solutionEngine.sendCaseNumber')
             }
         });
-        $.ajax(sendCaseNum);
     };
 
     //Retrieve a case
@@ -800,7 +812,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum);
         }
 
-        fetchCase = $.extend({}, baseAjaxParams, {
+        fetchCase = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response) {
@@ -820,7 +832,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchCase);
     };
 
     //update case comment
@@ -837,7 +848,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/comments/' + commentId);
         }
 
-        fetchCaseComments = $.extend({}, baseAjaxParams, {
+        fetchCaseComments = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -851,7 +862,6 @@
                 401: reportToSentry('PUT', '/rs/cases/', 'strata.cases.comments.update')
             }
         });
-        $.ajax(fetchCaseComments);
     };
 
     //Retrieve case comments
@@ -868,7 +878,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/comments');
         }
 
-        fetchCaseComments = $.extend({}, baseAjaxParams, {
+        fetchCaseComments = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.comment !== undefined) {
@@ -885,7 +895,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchCaseComments);
     };
 
     //List External Updates
@@ -902,7 +911,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/externalTrackerUpdates');
         }
 
-        fetchCaseExternalUpdates = $.extend({}, baseAjaxParams, {
+        fetchCaseExternalUpdates = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.external_tracker_update !== undefined) {
@@ -919,7 +928,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchCaseExternalUpdates);
     };
 
     //TODO: Support DRAFT comments? Only useful for internal
@@ -938,7 +946,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/comments');
         }
 
-        createComment = $.extend({}, baseAjaxParams, {
+        createComment = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casecomment),
             type: 'POST',
@@ -966,7 +974,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(createComment);
     };
 
     //List cases for the given user
@@ -983,7 +990,7 @@
         url.addQueryParam('includeClosed', closed);
 
 
-        fetchCases = $.extend({}, baseAjaxParams, {
+        fetchCases = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response['case'] !== undefined) {
@@ -1000,7 +1007,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchCases);
     };
 
     //Utility wrapper for preparing SOLR query
@@ -1101,7 +1107,7 @@
         url.addQueryParam('partnerSearch', partnerSearch);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
-        searchCases = $.extend({}, baseAjaxParams, {
+        searchCases = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response['case'] !== undefined) {
@@ -1118,7 +1124,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(searchCases);
     };
 
     strata.cases.advancedSearch = function (onSuccess, onFailure, query, order, offset, limit, format, caseFields) {
@@ -1137,7 +1142,7 @@
             url.addQueryParam('sort', order);
         }
 
-        advancedSearchCases = $.extend({}, baseAjaxParams, {
+        advancedSearchCases = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (format == 'csv') {
@@ -1165,7 +1170,6 @@
                 dataType: 'text'
             } : {}
         );
-        $.ajax(advancedSearchCases);
     }
 
     //Create a new case comment
@@ -1183,7 +1187,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/notified_users');
         }
 
-        addNotifiedUser = $.extend({}, baseAjaxParams, {
+        addNotifiedUser = handleJWTandCallAjax({
             url: url,
             data: '{"user": [{"ssoUsername":"' + ssoUserName + '"}]}',
             type: 'POST',
@@ -1204,7 +1208,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(addNotifiedUser);
     };
 
     strata.cases.notified_users.remove = function (casenum, ssoUserName, onSuccess, onFailure) {
@@ -1215,7 +1218,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/notified_users/' + encodeURIComponent(ssoUserName));
 
-        removeNotifiedUser = $.extend({}, baseAjaxParams, {
+        removeNotifiedUser = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -1232,7 +1235,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(removeNotifiedUser);
     };
 
     //Add Sbrs to case
@@ -1250,7 +1252,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/sbr');
         }
 
-        addCaseSbrs = $.extend({}, baseAjaxParams, {
+        addCaseSbrs = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(sbrGroups),
             type: 'POST',
@@ -1271,7 +1273,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(addCaseSbrs);
     };
 
     strata.cases.sbrs.remove = function (casenum, sbrGroups, onSuccess, onFailure) {
@@ -1282,7 +1283,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/sbr');
 
-        removeCaseSbrs = $.extend({}, baseAjaxParams, {
+        removeCaseSbrs = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(sbrGroups),
             type: 'DELETE',
@@ -1300,14 +1301,13 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(removeCaseSbrs);
     };
 
     //List cases in CSV for the given user
     strata.cases.csv = function (onSuccess, onFailure) {
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases');
 
-        fetchCasesCSV = $.extend({}, baseAjaxParams, {
+        fetchCasesCSV = handleJWTandCallAjax({
             headers: {
                 Accept: 'text/csv'
             },
@@ -1324,7 +1324,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
             }
         });
-        $.ajax(fetchCasesCSV);
     };
 
     //Filter cases
@@ -1339,7 +1338,7 @@
         //Remove any 0 length fields
         removeEmpty(casefilter);
 
-        filterCases = $.extend({}, baseAjaxParams, {
+        filterCases = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casefilter),
             contentType: 'application/json',
@@ -1360,7 +1359,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(filterCases);
     };
 
     //Create a new case
@@ -1372,7 +1370,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases');
 
-        createAttachment = $.extend({}, baseAjaxParams, {
+        createAttachment = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casedata),
             type: 'POST',
@@ -1397,7 +1395,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(createAttachment);
     };
 
     //Update a case
@@ -1420,7 +1417,7 @@
             onSuccess();
         };
 
-        updateCase = $.extend({}, baseAjaxParams, {
+        updateCase = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(casedata),
             type: 'PUT',
@@ -1442,7 +1439,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(updateCase);
     };
 
 
@@ -1460,7 +1456,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/attachments');
         }
 
-        listCaseAttachments = $.extend({}, baseAjaxParams, {
+        listCaseAttachments = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.attachment === undefined) {
@@ -1477,7 +1473,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(listCaseAttachments);
     };
 
     //POST an attachment
@@ -1500,7 +1495,7 @@
             url.addQueryParam("private", isPrivate);
         }
 
-        createAttachment = $.extend({}, baseAjaxParams, {
+        createAttachment = handleJWTandCallAjax({
             xhr: function () {
                 var xhr = new window.XMLHttpRequest();
                 if (onProgress != null && $.isFunction(onProgress)) {
@@ -1538,7 +1533,6 @@
                 }
             }
         });
-        $.ajax(createAttachment);
     };
 
     strata.cases.attachments.remove = function (attachmentId, casenum, onSuccess, onFailure) {
@@ -1551,7 +1545,7 @@
             strataHostname.clone().setPath(
                 '/rs/cases/' + casenum + '/attachments/' + attachmentId
             );
-        deleteAttachment = $.extend({}, baseAjaxParams, {
+        deleteAttachment = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -1563,7 +1557,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(deleteAttachment);
     };
 
     //Change the case owner
@@ -1575,7 +1568,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/internal/cases/' + casenum + '/changeowner').addQueryParam('contactSsoName', ssoUserName.toString());
 
-        updateOwner = $.extend({}, baseAjaxParams, {
+        updateOwner = handleJWTandCallAjax({
             url: url,
             type: 'POST',
             method: 'POST',
@@ -1588,7 +1581,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(updateOwner);
     };
 
     //Base for symptoms
@@ -1602,7 +1594,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/symptoms/extractor');
 
-        getSymptomsFromText = $.extend({}, baseAjaxParams, {
+        getSymptomsFromText = handleJWTandCallAjax({
             url: url,
             data: data,
             type: 'POST',
@@ -1622,7 +1614,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(getSymptomsFromText);
     };
 
     //Base for groups
@@ -1640,7 +1631,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/groups/contact/' + encodeURIComponent(ssoUserName));
         }
 
-        listGroups = $.extend({}, baseAjaxParams, {
+        listGroups = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.group !== undefined) {
@@ -1656,7 +1647,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(listGroups);
     };
 
     //Create a group
@@ -1672,7 +1662,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        createGroup = $.extend({}, baseAjaxParams, {
+        createGroup = handleJWTandCallAjax({
             url: url,
             type: 'POST',
             method: 'POST',
@@ -1695,7 +1685,6 @@
                 401: reportToSentry('POST', '/rs/groups', 'strata.groups.create')
             }
         });
-        $.ajax(createGroup);
     };
 
     //Update a group
@@ -1710,7 +1699,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        updateGroup = $.extend({}, baseAjaxParams, {
+        updateGroup = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -1733,7 +1722,6 @@
                 401: reportToSentry('PUT', '/rs/groups', 'strata.groups.update')
             }
         });
-        $.ajax(updateGroup);
     };
 
     //Update a group
@@ -1748,7 +1736,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        updateGroup = $.extend({}, baseAjaxParams, {
+        updateGroup = handleJWTandCallAjax({
             url: url,
             type: 'POST',
             method: 'POST',
@@ -1764,7 +1752,6 @@
                 401: reportToSentry('POST', '/rs/groups/default', 'strata.groups.createDefault')
             }
         });
-        $.ajax(updateGroup);
     };
 
     //Delete a group
@@ -1780,7 +1767,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        deleteGroup = $.extend({}, baseAjaxParams, {
+        deleteGroup = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -1795,7 +1782,6 @@
                 401: reportToSentry('DELETE', '/rs/groups', 'strata.groups.remove')
             }
         });
-        $.ajax(deleteGroup);
     };
 
     //Retrieve a group
@@ -1812,7 +1798,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/groups/' + groupnum);
         }
 
-        fetchGroup = $.extend({}, baseAjaxParams, {
+        fetchGroup = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -1822,7 +1808,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchGroup);
     };
 
     //Base for groupUsers
@@ -1839,7 +1824,7 @@
             onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
         };
 
-        updateGroupUsers = $.extend({}, baseAjaxParams, {
+        updateGroupUsers = handleJWTandCallAjax({
             url: url,
             type: 'PUT',
             method: 'PUT',
@@ -1856,7 +1841,6 @@
                 401: reportToSentry('PUT', '/rs/account/groups/users', 'strata.groupUsers.update')
             }
         });
-        $.ajax(updateGroupUsers);
     };
 
     //Base for products
@@ -1872,7 +1856,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/products');
         }
 
-        listProducts = $.extend({}, baseAjaxParams, {
+        listProducts = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.product !== undefined) {
@@ -1888,7 +1872,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(listProducts);
     };
 
     //Retrieve a product
@@ -1905,7 +1888,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/products/' + code);
         }
 
-        fetchProduct = $.extend({}, baseAjaxParams, {
+        fetchProduct = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -1915,7 +1898,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchProduct);
     };
 
     //Retrieve versions for a product
@@ -1932,7 +1914,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/products/' + code + '/versions');
         }
 
-        fetchProductVersions = $.extend({}, baseAjaxParams, {
+        fetchProductVersions = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.version !== undefined) {
@@ -1948,7 +1930,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchProductVersions);
     };
 
     //Base for values
@@ -1963,7 +1944,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/types');
 
-        caseTypes = $.extend({}, baseAjaxParams, {
+        caseTypes = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.value !== undefined) {
@@ -1979,7 +1960,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(caseTypes);
     };
 
     //Retrieve the case severities
@@ -1989,7 +1969,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/severity');
 
-        caseSeverities = $.extend({}, baseAjaxParams, {
+        caseSeverities = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.value !== undefined) {
@@ -2005,7 +1985,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(caseSeverities);
     };
 
     //Retrieve the case statuses
@@ -2015,7 +1994,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/status');
 
-        caseStatus = $.extend({}, baseAjaxParams, {
+        caseStatus = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.value !== undefined) {
@@ -2031,7 +2010,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(caseStatus);
     };
 
     //Retrieve the attachment max. size
@@ -2041,7 +2019,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/case/attachment/size');
 
-        attachmentMaxSize = $.extend({}, baseAjaxParams, {
+        attachmentMaxSize = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response !== undefined) {
@@ -2057,7 +2035,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(attachmentMaxSize);
     };
 
     //Retrieve business hours
@@ -2068,7 +2045,7 @@
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/values/businesshours');
         url.addQueryParam('timezone', timezone);
 
-        businesshours = $.extend({}, baseAjaxParams, {
+        businesshours = handleJWTandCallAjax({
             url: url,
             headers: {
                 accept: 'application/vnd.redhat.businesshours+json'
@@ -2087,7 +2064,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(businesshours);
     };
 
     //Base for System Profiles
@@ -2100,7 +2076,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/system_profiles');
 
-        fetchSystemProfiles = $.extend({}, baseAjaxParams, {
+        fetchSystemProfiles = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.system_profile !== undefined) {
@@ -2116,7 +2092,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchSystemProfiles);
     };
 
     //Get a specific system_profile, either by hash or casenum
@@ -2134,7 +2109,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/system_profiles/' + casenum);
         }
 
-        fetchSystemProfile = $.extend({}, baseAjaxParams, {
+        fetchSystemProfile = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if ($.isArray(response.system_profile)) {
@@ -2150,7 +2125,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchSystemProfile);
     };
     //TODO: Create helper class to Handle list + filtering
 
@@ -2163,7 +2137,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/system_profiles');
 
-        createSystemProfile = $.extend({}, baseAjaxParams, {
+        createSystemProfile = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(systemprofile),
             type: 'POST',
@@ -2182,7 +2156,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(createSystemProfile);
     };
 
     strata.accounts = {};
@@ -2195,7 +2168,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts');
 
-        fetchAccounts = $.extend({}, baseAjaxParams, {
+        fetchAccounts = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2205,7 +2178,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchAccounts);
     };
 
     //Get an Account
@@ -2222,7 +2194,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/' + accountnum);
         }
 
-        fetchAccount = $.extend({}, baseAjaxParams, {
+        fetchAccount = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2232,7 +2204,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchAccount);
     };
 
     //Get an Accounts Users
@@ -2252,7 +2223,7 @@
                 .setPath(secureSupportPathPrefix + '/rs/accounts/' + accountnum + '/groups/' + group + '/users');
         }
 
-        fetchAccountUsers = $.extend({}, baseAjaxParams, {
+        fetchAccountUsers = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.user !== undefined) {
@@ -2268,7 +2239,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchAccountUsers);
     };
 
     strata.accounts.addBookmark = function (accountNumber, ssoName, onSuccess, onFailure) {
@@ -2278,7 +2248,7 @@
         if (ssoName == null) { throw 'Contact SSO must be specified'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/bookmarks');
-        var addBookmark = $.extend({}, baseAjaxParams, {
+        var addBookmark = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify({
                 accountNumber: accountNumber,
@@ -2296,7 +2266,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
             }
         });
-        $.ajax(addBookmark);
     };
 
     strata.accounts.removeBookmark = function (accountNumber, ssoName, onSuccess, onFailure) {
@@ -2308,7 +2277,7 @@
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/' + accountNumber + '/bookmarks');
         url.addQueryParam('contactSsoName', ssoName);
 
-        var removeBookmark = $.extend({}, baseAjaxParams, {
+        var removeBookmark = handleJWTandCallAjax({
             url: url,
             type: 'DELETE',
             method: 'DELETE',
@@ -2321,7 +2290,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
             }
         });
-        $.ajax(removeBookmark);
     };
 
     //Get Accounts under a partner
@@ -2338,7 +2306,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/customer/' + accountnum);
         }
 
-        fetchAccount = $.extend({}, baseAjaxParams, {
+        fetchAccount = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2348,7 +2316,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchAccount);
     };
 
     //Get Accounts that manage a customer
@@ -2365,7 +2332,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/accounts/partner/' + accountnum);
         }
 
-        fetchAccount = $.extend({}, baseAjaxParams, {
+        fetchAccount = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2375,7 +2342,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchAccount);
     };
 
     strata.entitlements = {};
@@ -2390,7 +2356,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/entitlements/contact/' + encodeURIComponent(ssoUserName) + '?showAll=' + showAll.toString());
         }
 
-        fetchEntitlements = $.extend({}, baseAjaxParams, {
+        fetchEntitlements = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2400,7 +2366,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchEntitlements);
     };
 
     //Helper function to "diagnose" text, chains problems and solutions calls
@@ -2426,7 +2391,7 @@
         if (rows === undefined) { rows = 50; }
         if (chain === undefined) { chain = false; }
 
-        var searchStrata = $.extend({}, baseAjaxParams, {
+        var searchStrata = handleJWTandCallAjax({
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
             },
@@ -2454,7 +2419,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(searchStrata);
     };
 
     strata.health = {};
@@ -2466,7 +2430,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/health/sfdc');
 
-        fetchSfdcHealth = $.extend({}, baseAjaxParams, {
+        fetchSfdcHealth = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 onSuccess(response);
@@ -2478,7 +2442,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchSfdcHealth);
     };
 
     strata.utils = {};
@@ -2498,7 +2461,7 @@
     };
 
     strata.utils.getURI = function (uri, resourceType, onSuccess, onFailure) {
-        fetchURI = $.extend({}, baseAjaxParams, {
+        fetchURI = handleJWTandCallAjax({
             url: uri,
             success: function (response) {
                 convertDates(response);
@@ -2511,7 +2474,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchURI);
     };
 
     strata.utils.fixUsersObject = function (oldUsers) {
@@ -2544,7 +2506,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/chats').addQueryParam('ssoName', ssoUserName.toString());;
         }
 
-        fetchChatTranscript = $.extend({}, baseAjaxParams, {
+        fetchChatTranscript = handleJWTandCallAjax({
             url: url,
             success: onSuccess,
             error: function (xhr, reponse, status) {
@@ -2554,7 +2516,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchChatTranscript);
     };
 
     strata.escalation = {};
@@ -2568,7 +2529,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/escalations');
 
-        createEscalation = $.extend({}, baseAjaxParams, {
+        createEscalation = handleJWTandCallAjax({
             url: url,
             data: JSON.stringify(escalationData),
             type: 'POST',
@@ -2596,7 +2557,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(createEscalation);
     };
 
     strata.reviews = {};
@@ -2606,7 +2566,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases?' + query);
-        caseReviewSelector = $.extend({}, baseAjaxParams, {
+        caseReviewSelector = handleJWTandCallAjax({
             url: url,
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
@@ -2625,7 +2585,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(caseReviewSelector);
     };
 
     strata.reviews.getSolutionNumber = function (query, onSuccess, onFailure) {
@@ -2633,7 +2592,7 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/recommendations?' + query);
-        solutionReviewSelector = $.extend({}, baseAjaxParams, {
+        solutionReviewSelector = handleJWTandCallAjax({
             url: url,
             headers: {
                 accept: 'application/vnd.redhat.solr+json'
@@ -2652,7 +2611,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(solutionReviewSelector);
     };
 
     //Retrieve case symptoms
@@ -2670,7 +2628,7 @@
             url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases/' + casenum + '/symptoms');
         }
 
-        fetchCaseSymptoms = $.extend({}, baseAjaxParams, {
+        fetchCaseSymptoms = handleJWTandCallAjax({
             url: url,
             success: function (response) {
                 if (response.symptom !== undefined) {
@@ -2686,7 +2644,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(fetchCaseSymptoms);
     };
 
     //Retrieve symptoms related solutions
@@ -2698,7 +2655,7 @@
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/problems').addQueryParam('onlySymptoms', isOnlySymptoms).addQueryParam('limit', limit);
 
-        symptomSolutions = $.extend({}, baseAjaxParams, {
+        symptomSolutions = handleJWTandCallAjax({
             url: url,
             data: data,
             type: 'POST',
@@ -2717,7 +2674,6 @@
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, reponse, status);
             }
         });
-        $.ajax(symptomSolutions);
     };
     return strata;
 }));
