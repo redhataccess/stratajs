@@ -1011,7 +1011,7 @@
     };
 
     //Utility wrapper for preparing SOLR query
-    function prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, start) {
+    function prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, start, useNewSearch) {
         var solrQueryString = "";
         var concatQueryString = function (param) {
             if (solrQueryString === "") {
@@ -1064,7 +1064,7 @@
                 concatQueryString(queryParams[i]);
             }
         }
-        url.addQueryParam('query', solrQueryString);
+        url.addQueryParam(useNewSearch ? 'q' : 'query', solrQueryString);
         if (!isObjectNothing(sortField)) {
             var solrSortOrder = 'case_' + sortField;
             if (!isObjectNothing(sortOrder)) {
@@ -1080,7 +1080,7 @@
             url.addQueryParam('start', start);
         }
         if (!isObjectNothing(limit)) {
-            url.addQueryParam('limit', limit);
+            url.addQueryParam(useNewSearch ? 'rows' : 'limit', limit);
         }
         return url;
     }
@@ -1103,14 +1103,40 @@
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
 
         var url = strataHostname.clone().setPath(secureSupportPathPrefix + '/rs/cases');
-        prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, start);
+        prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, sortOrder, offset, limit, queryParams, start, true);
         url.addQueryParam('newSearch', true);  // Add this query param to direct search to Calaveras
         url.addQueryParam('partnerSearch', partnerSearch);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
+        const mapResponse = (caseDocs, totalCases) => ({
+            total_count: totalCases,
+            case: caseDocs.map((kase) => $.extend({}, kase, {
+                created_by: kase.case_createdByName,
+                created_date: kase.case_createdDate,
+                last_modified_by: kase.case_lastModifiedByName,
+                last_modified_date: kase.case_lastModifiedDate,
+                summary: kase.case_summary,
+                status: kase.case_status,
+                product: kase.case_product[0],
+                version: kase.case_version,
+                account_number: kase.case_accountNumber,
+                contact_name: kase.case_contactName,
+                owner: kase.case_owner,
+                severity: kase.case_severity,
+                last_public_update_at: kase.case_last_public_update_date,
+                last_public_update_by: kase.case_last_public_update_by,
+                case_number: kase.case_number,
+                folder_name: kase && kase.case_folderName ? kase.case_folderName : ''
+            }))
+        });
+
         searchCases = handleJWTandCallAjax({
+            headers: {
+                Accept: 'application/vnd.redhat.solr+json'
+            },
             url: url,
-            success: function (response) {
+            success: function (res) {
+                const response = mapResponse(res.response.docs, res.response.numFound);
                 if (response['case'] !== undefined) {
                     response['case'].forEach(convertDates);
                     onSuccess(response);
