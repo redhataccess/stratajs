@@ -1153,51 +1153,48 @@
         });
     };
 
-    strata.cases.advancedSearch = function (onSuccess, onFailure, query, order, offset, limit, format, caseFields) {
+    strata.cases.advancedSearch = function (onSuccess, onFailure, query, order, offset, limit, format, caseFields, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (limit === undefined) { limit = 50; }
         if (offset === undefined) { offset = 0; }
 
         var url = strataHostname.clone().setPath("/rs/cases");
-        url.addQueryParam('query', query);
+        prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, order, offset, limit, query, null);
         url.addQueryParam('newSearch', true);
-        url.addQueryParam('limit', limit);
-        url.addQueryParam('offset', offset);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
-        if (order != null) {
-            url.addQueryParam('sort', order);
-        }
 
-        advancedSearchCases = handleJWTandCallAjax({
+        const ajaxParams = {
             url: url,
-            success: function (response) {
-                if (format == 'csv') {
+                success: function (response) {
+            if (format == 'csv') {
+                onSuccess(response);
+            } else {
+                if (response['case'] != undefined) {
+                    response['case'].forEach(convertDates);
                     onSuccess(response);
                 } else {
-                    if (response['case'] != undefined) {
-                        response['case'].forEach(convertDates);
-                        onSuccess(response);
-                    } else {
-                        onSuccess([]);
-                    }
+                    onSuccess([]);
                 }
-            },
+            }
+        },
             error: function (xhr, response, status) {
                 if (xhr.status == 401) {
                     reportToSentry('GET', '/rs/cases/', 'strata.cases.advancedSearch');
                 }
                 onFailure('Error ' + xhr.status + ' ' + xhr.statusText, xhr, response, status);
             }
-        },
-            format == "csv" ? {
-                headers: {
-                    Accept: 'text/csv'
-                },
-                dataType: 'text'
-            } : {}
-        );
-    }
+        }
+
+        if (format === 'csv') {
+            ajaxParams.dataType = 'text';
+            ajaxParams.headers = {
+                Accept: 'text/csv'
+            };
+        }
+
+        advancedSearchCases = handleJWTandCallAjax(ajaxParams);
+    };
 
     //Create a new case comment
     strata.cases.notified_users.add = function (casenum, ssoUserName, onSuccess, onFailure) {
