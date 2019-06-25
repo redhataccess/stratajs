@@ -95,7 +95,7 @@
         addCaseSbrs,
         removeCaseSbrs;
 
-    strata.version = '1.6.6';
+    strata.version = '1.6.7';
     redhatClientID = 'stratajs-' + strata.version;
 
     function getIsTokenExpired() {
@@ -1116,7 +1116,7 @@
         url.addQueryParam('partnerSearch', partnerSearch);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
-        const mapResponse = (caseDocs, totalCases) => ({
+        var mapResponse = (caseDocs, totalCases) => ({
             total_count: totalCases,
             case: caseDocs.map((kase) => $.extend({}, kase, {
                 created_by: kase.case_createdByName,
@@ -1144,7 +1144,7 @@
             },
             url: url,
             success: function (res) {
-                const response = mapResponse(res.response.docs, res.response.numFound);
+                var response = mapResponse(res.response.docs, res.response.numFound);
                 if (response['case'] !== undefined) {
                     response['case'].forEach(convertDates);
                     onSuccess(response);
