@@ -1172,7 +1172,7 @@
         url.addQueryParam('newSearch', true);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
-        const ajaxParams = {
+        var ajaxParams = {
             url: url,
                 success: function (response) {
             if (format == 'csv') {
