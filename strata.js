@@ -95,7 +95,7 @@
         addCaseSbrs,
         removeCaseSbrs;
 
-    strata.version = '1.6.5';
+    strata.version = '1.6.6';
     redhatClientID = 'stratajs-' + strata.version;
 
     function getIsTokenExpired() {
@@ -1172,7 +1172,7 @@
         url.addQueryParam('newSearch', true);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
-        const ajaxParams = {
+        var ajaxParams = {
             url: url,
                 success: function (response) {
             if (format == 'csv') {
