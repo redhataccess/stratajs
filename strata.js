@@ -119,9 +119,17 @@
     }
 
     function handleJWTandCallAjax(ajaxParams) {
-        isTokenExpired() && window.sessionjs.updateToken(true).success(function() {
-            $.ajax($.extend({}, baseAjaxParams, ajaxParams));
-        });
+        $.ajax($.extend({}, baseAjaxParams, ajaxParams));
+
+        // Not working right now, update taken is failing in the qa environment.
+        // Will discuss with michael clayton.
+        // if (isTokenExpired()) {
+        //     window.sessionjs.updateToken(true).success(function() {
+        //         $.ajax($.extend({}, baseAjaxParams, ajaxParams));
+        //     });
+        // } else {
+        //     $.ajax($.extend({}, baseAjaxParams, ajaxParams));
+        // }
     }
 
     // function for reporting error to sentry
