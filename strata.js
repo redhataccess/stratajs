@@ -95,7 +95,7 @@
         addCaseSbrs,
         removeCaseSbrs;
 
-    strata.version = '1.6.4';
+    strata.version = '1.6.8';
     redhatClientID = 'stratajs-' + strata.version;
 
     function getIsTokenExpired() {
@@ -1116,27 +1116,31 @@
         url.addQueryParam('partnerSearch', partnerSearch);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
 
-        const mapResponse = (caseDocs, totalCases) => ({
-            total_count: totalCases,
-            case: caseDocs.map((kase) => $.extend({}, kase, {
-                created_by: kase.case_createdByName,
-                created_date: kase.case_createdDate,
-                last_modified_by: kase.case_lastModifiedByName,
-                last_modified_date: kase.case_lastModifiedDate,
-                summary: kase.case_summary,
-                status: kase.case_status,
-                product: kase.case_product[0],
-                version: kase.case_version,
-                account_number: kase.case_accountNumber,
-                contact_name: kase.case_contactName,
-                owner: kase.case_owner,
-                severity: kase.case_severity,
-                last_public_update_at: kase.case_last_public_update_date,
-                last_public_update_by: kase.case_last_public_update_by,
-                case_number: kase.case_number,
-                folder_name: kase && kase.case_folderName ? kase.case_folderName : ''
-            }))
-        });
+        var mapResponse = function (caseDocs, totalCases) {
+            return ({
+                total_count: totalCases,
+                case: caseDocs.map(function (kase) {
+                    return $.extend({}, kase, {
+                        created_by: kase.case_createdByName,
+                        created_date: kase.case_createdDate,
+                        last_modified_by: kase.case_lastModifiedByName,
+                        last_modified_date: kase.case_lastModifiedDate,
+                        summary: kase.case_summary,
+                        status: kase.case_status,
+                        product: kase.case_product[0],
+                        version: kase.case_version,
+                        account_number: kase.case_accountNumber,
+                        contact_name: kase.case_contactName,
+                        owner: kase.case_owner,
+                        severity: kase.case_severity,
+                        last_public_update_at: kase.case_last_public_update_date,
+                        last_public_update_by: kase.case_last_public_update_by,
+                        case_number: kase.case_number,
+                        folder_name: kase && kase.case_folderName ? kase.case_folderName : ''
+                    })
+                })
+            });
+        };
 
         searchCases = handleJWTandCallAjax({
             headers: {
@@ -1144,7 +1148,7 @@
             },
             url: url,
             success: function (res) {
-                const response = mapResponse(res.response.docs, res.response.numFound);
+                var response = mapResponse(res.response.docs, res.response.numFound);
                 if (response['case'] !== undefined) {
                     response['case'].forEach(convertDates);
                     onSuccess(response);
@@ -1176,7 +1180,8 @@
         if (order != null) {
             url.addQueryParam('sort', order);
         }
-        const ajaxParams = {
+
+        var ajaxParams = {
             url: url,
                 success: function (response) {
             if (format == 'csv') {
