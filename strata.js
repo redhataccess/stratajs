@@ -1161,17 +1161,21 @@
         });
     };
 
-    strata.cases.advancedSearch = function (onSuccess, onFailure, query, order, offset, limit, format, caseFields, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField) {
+    strata.cases.advancedSearch = function (onSuccess, onFailure, query, order, offset, limit, format, caseFields) {
         if (!$.isFunction(onSuccess)) { throw 'onSuccess callback must be a function'; }
         if (!$.isFunction(onFailure)) { throw 'onFailure callback must be a function'; }
         if (limit === undefined) { limit = 50; }
         if (offset === undefined) { offset = 0; }
 
         var url = strataHostname.clone().setPath("/rs/cases");
-        prepareURLParams(url, caseStatus, caseOwner, caseGroup, accountNumber, searchString, sortField, order, offset, limit, query, null);
+        url.addQueryParam('query', query);
         url.addQueryParam('newSearch', true);
+        url.addQueryParam('limit', limit);
+        url.addQueryParam('offset', offset);
         caseFields && caseFields.length > 0 && url.addQueryParam('fl', caseFields.join(','));
-
+        if (order != null) {
+            url.addQueryParam('sort', order);
+        }
         const ajaxParams = {
             url: url,
                 success: function (response) {
