@@ -99,6 +99,9 @@
     redhatClientID = 'stratajs-' + strata.version;
 
     strata.logToSentry = function (message) {
+        if (!message) {
+            return;
+        }
         if (window.sessionjs && window.sessionjs.reportProblem) {
             if (window.app) {
                 window.sessionjs.reportProblem(message, {
